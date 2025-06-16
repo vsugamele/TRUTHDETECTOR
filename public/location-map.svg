@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="300" height="200" viewBox="0 0 300 200">
+  <!-- Background -->
+  <rect width="300" height="200" fill="#E8E8E8"/>
+  
+  <!-- Roads -->
+  <path d="M50,20 L250,20 L250,180 L50,180 Z" stroke="#FFFFFF" stroke-width="4" fill="none"/>
+  <path d="M100,20 L100,180" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  <path d="M150,20 L150,180" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  <path d="M200,20 L200,180" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  <path d="M50,60 L250,60" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  <path d="M50,100 L250,100" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  <path d="M50,140 L250,140" stroke="#FFFFFF" stroke-width="2" fill="none"/>
+  
+  <!-- Location markers -->
+  <circle cx="120" cy="80" r="8" fill="#FF4136" opacity="0.7"/>
+  <circle cx="120" cy="80" r="12" fill="#FF4136" opacity="0.3"/>
+  
+  <circle cx="180" cy="120" r="8" fill="#FF4136" opacity="0.7"/>
+  <circle cx="180" cy="120" r="12" fill="#FF4136" opacity="0.3"/>
+  
+  <!-- Connecting line -->
+  <path d="M120,80 L180,120" stroke="#FF4136" stroke-width="2" stroke-dasharray="4" fill="none"/>
+</svg>
