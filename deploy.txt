@@ -1,0 +1,1 @@
+Forçar deploy na Vercel - Timestamp: 2025-06-16T22:59:12
