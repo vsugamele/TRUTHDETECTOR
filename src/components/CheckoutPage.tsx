@@ -14,6 +14,18 @@ interface CheckoutPageProps {
   onSuccess: () => void;
 }
 
+// Função auxiliar para registrar eventos do Clarity
+const trackEvent = (eventName: string, eventData?: Record<string, any>) => {
+  if (window.clarity) {
+    try {
+      window.clarity("event", eventName, eventData);
+      console.log(`\u2705 Clarity event tracked: ${eventName}`, eventData);
+    } catch (err) {
+      console.error("Error tracking Clarity event:", err);
+    }
+  }
+};
+
 const CheckoutPage = ({
   userData,
   onSuccess
@@ -39,6 +51,13 @@ const CheckoutPage = ({
     const paramString = urlParams.toString();
     setUtmParams(paramString);
     console.log('URL parameters captured:', paramString);
+    
+    // Rastrear evento de visualização da página de checkout
+    trackEvent("checkout_page_viewed", {
+      hasUtmParams: !!paramString,
+      phone: userData.phone,
+      gender: userData.gender
+    });
   }, []);
 
   useEffect(() => {
@@ -48,6 +67,13 @@ const CheckoutPage = ({
         const status = await verifyPayment(transactionId);
         if (status && status.ok && status.status === 'completed') {
           setPaymentStatus('completed');
+          
+          // Rastrear pagamento confirmado
+          trackEvent("payment_confirmed", { 
+            transactionId: transactionId.substring(0, 8) + '...',
+            timeToPayment: new Date().toISOString()
+          });
+          
           setTimeout(() => {
             onSuccess();
           }, 2000);
@@ -63,8 +89,13 @@ const CheckoutPage = ({
 
   const handleGeneratePix = async () => {
     if (!email) {
+      // Rastrear tentativa de gerar PIX sem e-mail
+      trackEvent("generate_pix_without_email");
       return;
     }
+    
+    // Rastrear início da geração de PIX
+    trackEvent("generate_pix_started", { email: email.split('@')[1] });
 
     const paymentData = {
       amount: 1990,
@@ -89,6 +120,15 @@ const CheckoutPage = ({
       setPixCode(response.pixCode);
       setTransactionId(response.transactionId);
       setShowPix(true);
+      
+      // Rastrear PIX gerado com sucesso
+      trackEvent("pix_generated_success", {
+        transactionId: response.transactionId.substring(0, 8) + '...',
+        amount: paymentData.amount
+      });
+    } else {
+      // Rastrear erro na geração de PIX
+      trackEvent("pix_generation_failed", { hasError: !!error });
     }
   };
 
@@ -96,6 +136,9 @@ const CheckoutPage = ({
     navigator.clipboard.writeText(pixCode);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
+    
+    // Rastrear cópia do código PIX
+    trackEvent("pix_code_copied", { codeLength: pixCode.length });
   };
 
   if (paymentStatus === 'completed') {

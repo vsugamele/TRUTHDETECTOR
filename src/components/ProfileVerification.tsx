@@ -35,6 +35,21 @@ const ProfileVerification = ({
 
   const handlePhoneSubmit = async () => {
     if (phone.length < 10) return;
+    
+    // Função auxiliar para registrar eventos do Clarity
+    const trackEvent = (eventName: string, eventData?: Record<string, any>) => {
+      if (window.clarity) {
+        try {
+          window.clarity("event", eventName, eventData);
+          console.log(`\u2705 Clarity event tracked: ${eventName}`, eventData);
+        } catch (err) {
+          console.error("Error tracking Clarity event:", err);
+        }
+      }
+    };
+
+    trackEvent("phone_verification_started", { phoneLength: phone.length });
+
     const profile = await fetchProfile(phone);
     
     // Sempre indica que encontrou o perfil, independente do resultado real
@@ -44,11 +59,28 @@ const ProfileVerification = ({
       // Se encontrou uma foto real
       setProfilePhoto(profile.photoUrl);
       setPhotoFound(true);
+      
+      // Rastrear evento de foto encontrada
+      if (window.clarity) {
+        window.clarity("event", "profile_photo_found");
+      }
     } else {
       // Se não encontrou foto, não mostra nenhuma imagem
       setProfilePhoto(undefined);
       // Ainda mostra que encontrou dados
       setPhotoFound(true);
+      
+      // Rastrear evento de foto não encontrada
+      if (window.clarity) {
+        window.clarity("event", "profile_photo_not_found");
+      }
+    }
+    
+    // Rastrear evento de verificação do número concluída
+    if (window.clarity) {
+      window.clarity("event", "phone_verification_completed", {
+        hasPhoto: !!profile?.photoUrl
+      });
     }
   };
 

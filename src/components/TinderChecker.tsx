@@ -21,28 +21,94 @@ interface UserData {
   profilePhoto?: string;
 }
 
+// Declare o tipo da janela global com o Clarity
+declare global {
+  interface Window {
+    clarity?: {
+      (method: string, ...args: any[]): void;
+    };
+  }
+}
+
+// Função auxiliar para registrar eventos do Clarity
+const trackEvent = (eventName: string, eventData?: Record<string, any>) => {
+  if (window.clarity) {
+    try {
+      window.clarity("event", eventName, eventData);
+      console.log(`✅ Clarity event tracked: ${eventName}`, eventData);
+    } catch (err) {
+      console.error("Error tracking Clarity event:", err);
+    }
+  }
+};
+
 const TinderChecker = () => {
   const [currentStep, setCurrentStep] = useState<Step>('landing');
-  const [userData, setUserData] = useState<UserData>({ phone: '', gender: '' });
+  const [userData, setUserData] = useState<UserData>({
+    phone: '',
+    gender: '',
+    profilePhoto: undefined
+  });
+
+  // Rastreia mudanças de etapas no funil com o Clarity
+  useEffect(() => {
+    trackEvent("funnel_step_changed", { step: currentStep });
+
+    // Rastrear visualização da página com nomes específicos
+    switch(currentStep) {
+      case 'landing':
+        trackEvent("view_landing_page");
+        break;
+      case 'verification':
+        trackEvent("view_verification_page");
+        break;
+      case 'analyzing':
+        trackEvent("view_analyzing_page");
+        break;
+      case 'results':
+        trackEvent("view_results_page");
+        break;
+      case 'checkout':
+        trackEvent("view_checkout_page");
+        break;
+      case 'success':
+        trackEvent("view_success_page");
+        break;
+    }
+  }, [currentStep]);
 
   const handleStartVerification = () => {
+    trackEvent("click_start_verification");
     setCurrentStep('verification');
   };
 
   const handleVerificationComplete = (data: UserData) => {
-    setUserData(data);
+    trackEvent("verification_complete", {
+      phoneLength: data.phone.length,
+      gender: data.gender,
+      hasProfilePhoto: !!data.profilePhoto
+    });
+
+    setUserData({
+      phone: data.phone,
+      gender: data.gender,
+      profilePhoto: data.profilePhoto
+    });
     setCurrentStep('analyzing');
   };
 
   const handleAnalysisComplete = () => {
+    trackEvent("analysis_complete");
     setCurrentStep('results');
   };
 
   const handlePurchaseReport = () => {
+    trackEvent("click_purchase_report");
     setCurrentStep('checkout');
   };
 
   const handlePaymentSuccess = () => {
+    trackEvent("payment_success");
     setCurrentStep('success');
   };
 

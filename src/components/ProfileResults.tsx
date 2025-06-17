@@ -14,12 +14,57 @@ interface ProfileResultsProps {
   onPurchase: () => void;
 }
 
+// Função auxiliar para registrar eventos do Clarity
+const trackEvent = (eventName: string, eventData?: Record<string, any>) => {
+  if (window.clarity) {
+    try {
+      window.clarity("event", eventName, eventData);
+      console.log(`\u2705 Clarity event tracked: ${eventName}`, eventData);
+    } catch (err) {
+      console.error("Error tracking Clarity event:", err);
+    }
+  }
+};
+
 const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
   const [timeLeft, setTimeLeft] = useState(300);
+  const checkoutSectionRef = React.useRef<HTMLDivElement>(null);
+
+  // Registrar visualização da página de resultados
+  useEffect(() => {
+    trackEvent("profile_results_viewed", {
+      hasProfilePhoto: !!userData.profilePhoto,
+      gender: userData.gender,
+      phoneDigits: userData.phone.length
+    });
+
+    // Registrar eventos de timer
+    trackEvent("countdown_timer_started", { initialSeconds: 300 });
+  }, []);
+  
+  // Função para rolar até a seção de checkout
+  const scrollToCheckout = () => {
+    trackEvent("blurred_content_clicked");
+    if (checkoutSectionRef.current) {
+      checkoutSectionRef.current.scrollIntoView({ 
+        behavior: 'smooth', 
+        block: 'center'
+      });
+    }
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
+      setTimeLeft((prev) => {
+        if (prev > 0) {
+          // Registrar marcos importantes de tempo restante
+          if (prev === 180) trackEvent("countdown_3_minutes_left");
+          if (prev === 60) trackEvent("countdown_1_minute_left");
+          if (prev === 30) trackEvent("countdown_30_seconds_left");
+          return prev - 1;
+        }
+        return 0;
+      });
     }, 1000);
 
     return () => clearInterval(timer);
@@ -70,7 +115,11 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
             </div>
             <div className="grid grid-cols-3 gap-2">
               {blurredPhotos.map((photo, i) => (
-                <div key={i} className="aspect-square bg-gray-800 rounded-lg flex items-center justify-center relative overflow-hidden">
+                <div 
+                  key={i} 
+                  className="aspect-square bg-gray-800 rounded-lg flex items-center justify-center relative overflow-hidden cursor-pointer hover:opacity-80 transition-opacity"
+                  onClick={scrollToCheckout}
+                >
                   <img 
                     src={photo} 
                     alt={`Foto ${i + 1}`}
@@ -79,6 +128,7 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-40 flex items-center justify-center">
                     <Eye className="w-6 h-6 text-white" />
+                    <span className="text-xs text-white ml-1">Clique para ver</span>
                   </div>
                 </div>
               ))}
@@ -86,8 +136,14 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
             
             {/* Seção de conversas embaçadas */}
             <div className="mt-4 space-y-2">
-              <div className="bg-gray-800 p-3 rounded-lg">
-                <div className="text-xs text-gray-400 mb-1">Conversa suspeita detectada</div>
+              <div 
+                className="bg-gray-800 p-3 rounded-lg cursor-pointer hover:bg-gray-700 transition-colors"
+                onClick={scrollToCheckout}
+              >
+                <div className="text-xs text-gray-400 mb-1 flex justify-between">
+                  <span>Conversa suspeita detectada</span>
+                  <span className="text-blue-400">Clique para revelar</span>
+                </div>
                 <div className="text-white text-sm" style={{ filter: 'blur(2px)' }}>
                   "Oi, que tal nos encontrarmos hoje à noite? 😘"
                 </div>
@@ -159,7 +215,10 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
             </div>
 
             <Button 
-              onClick={onPurchase}
+              onClick={() => {
+                trackEvent("unlock_report_clicked", { timeRemaining: timeLeft });
+                onPurchase();
+              }}
               className="w-full bg-gradient-to-r from-green-400 to-green-600 hover:from-green-500 hover:to-green-700 text-white font-bold py-3 rounded-full animate-pulse hover:animate-none transition-all duration-300 transform hover:scale-105 shadow-lg border-2 border-green-300"
             >
               📊 DESBLOQUEAR RELATÓRIO AGORA

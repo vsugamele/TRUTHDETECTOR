@@ -6,13 +6,45 @@ interface AnalyzingProfileProps {
   onComplete: () => void;
 }
 
+// Função auxiliar para registrar eventos do Clarity
+const trackEvent = (eventName: string, eventData?: Record<string, any>) => {
+  if (window.clarity) {
+    try {
+      window.clarity("event", eventName, eventData);
+      console.log(`\u2705 Clarity event tracked: ${eventName}`, eventData);
+    } catch (err) {
+      console.error("Error tracking Clarity event:", err);
+    }
+  }
+};
+
 const AnalyzingProfile = ({ onComplete }: AnalyzingProfileProps) => {
   useEffect(() => {
+    // Registrar início da análise do perfil
+    trackEvent("profile_analyzing_started");
+    
+    const checkpoints = [
+      { time: 500, event: "analysis_step_activity_check" },
+      { time: 1500, event: "analysis_step_photos_check" },
+      { time: 2500, event: "analysis_step_location_check" },
+      { time: 3500, event: "analysis_step_report_compiling" }
+    ];
+    
+    // Registrar cada etapa da análise
+    const stepTimers = checkpoints.map(({ time, event }) => 
+      setTimeout(() => trackEvent(event, { timestamp: new Date().toISOString() }), time)
+    );
+    
     const timer = setTimeout(() => {
+      // Registrar conclusão da análise
+      trackEvent("profile_analyzing_completed", { duration: 4000 });
       onComplete();
     }, 4000); // 4 segundos de análise
 
-    return () => clearTimeout(timer);
+    return () => {
+      clearTimeout(timer);
+      stepTimers.forEach(t => clearTimeout(t));
+    };
   }, [onComplete]);
 
   return (
