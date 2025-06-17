@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,6 +12,7 @@ interface ProfileVerificationProps {
     profilePhoto?: string;
   }) => void;
 }
+
 const ProfileVerification = ({
   onComplete
 }: ProfileVerificationProps) => {
@@ -20,14 +21,18 @@ const ProfileVerification = ({
   const [profilePhoto, setProfilePhoto] = useState<string | undefined>();
   const [photoFound, setPhotoFound] = useState(false);
   const [profileVerified, setProfileVerified] = useState(false);
+  const [autoDetectEnabled, setAutoDetectEnabled] = useState(true);
+  const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const {
     fetchProfile,
     isLoading,
     error
   } = useWhatsAppProfile();
-  
+
   // Imagem genérica de fallback para quando não encontrar foto
   const defaultProfileImage = "https://cdn.pixabay.com/photo/2015/10/05/22/37/blank-profile-picture-973460_1280.png";  
+
   const handlePhoneSubmit = async () => {
     if (phone.length < 10) return;
     const profile = await fetchProfile(phone);
@@ -46,6 +51,7 @@ const ProfileVerification = ({
       setPhotoFound(true);
     }
   };
+
   const handleVerify = () => {
     if (phone && gender) {
       onComplete({
@@ -55,10 +61,33 @@ const ProfileVerification = ({
       });
     }
   };
+
   const formatPhone = (value: string) => {
     const numbers = value.replace(/\D/g, '');
     setPhone(numbers);
+    
+    // Inicia a detecção automática após o usuário parar de digitar
+    if (typingTimeoutRef.current) {
+      clearTimeout(typingTimeoutRef.current);
+    }
+    
+    // Só inicia a busca se o número tiver pelo menos 10 dígitos
+    if (numbers.length >= 10 && autoDetectEnabled) {
+      typingTimeoutRef.current = setTimeout(() => {
+        handlePhoneSubmit();
+      }, 800); // 800ms após parar de digitar
+    }
   };
+
+  // Limpa o timeout quando o componente for desmontado
+  useEffect(() => {
+    return () => {
+      if (typingTimeoutRef.current) {
+        clearTimeout(typingTimeoutRef.current);
+      }
+    };
+  }, []);
+
   return <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
         {/* Header com alerta */}
@@ -85,8 +114,22 @@ const ProfileVerification = ({
                   <div className="flex items-center bg-gray-700 px-3 rounded-lg">
                     <span className="text-sm">+55</span>
                   </div>
-                  <Input type="tel" placeholder="11996284159" value={phone} onChange={e => formatPhone(e.target.value)} maxLength={11} className="flex-1 bg-gray-700 border-gray-600 text-white" />
-                  <Button onClick={handlePhoneSubmit} disabled={phone.length < 10 || isLoading} size="sm" className="bg-green-600 hover:bg-green-700">
+                  <Input 
+                    type="tel" 
+                    placeholder="11996284159" 
+                    value={phone} 
+                    onChange={e => formatPhone(e.target.value)} 
+                    onBlur={() => phone.length >= 10 && handlePhoneSubmit()}
+                    maxLength={11} 
+                    className="flex-1 bg-gray-700 border-gray-600 text-white" 
+                  />
+                  <Button 
+                    onClick={handlePhoneSubmit} 
+                    disabled={phone.length < 10 || isLoading} 
+                    size="sm" 
+                    className="bg-green-600 hover:bg-green-700 transition-opacity" 
+                    title="Verificar manualmente"
+                  >
                     {isLoading ? '...' : '✓'}
                   </Button>
                 </div>
