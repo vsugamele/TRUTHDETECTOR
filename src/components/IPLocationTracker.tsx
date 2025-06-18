@@ -257,7 +257,7 @@ const IPLocationTracker = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
-                  <strong>Aviso!</strong> Encontramos localizações suspeitas associadas a este número. Várias possíveis locais foram detectados.
+                  <strong>Aviso!</strong> Encontrado Localizações suspeitas em outros locais que não é sua residência ou local de trabalho.
                 </p>
               </div>
             </div>
