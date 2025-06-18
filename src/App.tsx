@@ -7,6 +7,7 @@ import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import PhoneTrackerPage from "./pages/PhoneTrackerPage";
 import IPTrackerPage from "./pages/IPTrackerPage";
+import MapTest from "./pages/MapTest";
 
 const queryClient = new QueryClient();
 
@@ -20,6 +21,7 @@ const App = () => (
           <Route path="/" element={<Index />} />
           <Route path="/phone-tracker" element={<PhoneTrackerPage />} />
           <Route path="/ip-tracker" element={<IPTrackerPage />} />
+          <Route path="/map-test" element={<MapTest />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

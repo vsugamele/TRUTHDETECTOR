@@ -93,7 +93,7 @@ const ActivityMonitor = () => {
                 </div>
                 <div className="text-gray-300 text-sm mt-1 flex items-center">
                   <MapPin className="h-3 w-3 mr-1 text-gray-400" />
-                  <span>São Paulo (120km distante)</span>
+                  <span><span className="blur-[3px] hover:blur-none transition-all duration-300 select-none">São Paulo</span> (120km distante)</span>
                 </div>
                 <div className="text-gray-300 text-sm flex items-center">
                   <Clock className="h-3 w-3 mr-1 text-gray-400" />
@@ -143,7 +143,7 @@ const ActivityMonitor = () => {
               </div>
               <div>
                 <span className="text-gray-400">Local:</span>
-                <span className="text-white ml-2">Shopping Center Ibirapuera</span>
+                <span className="text-white ml-2">Shopping Center <span className="blur-[3px] hover:blur-none transition-all duration-300 select-none">Ibirapuera</span></span>
               </div>
               <div>
                 <span className="text-gray-400">Tempo:</span>

@@ -1,21 +1,24 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, ArrowRight, ArrowLeft, Loader2 } from 'lucide-react';
+import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Upload, Image } from 'lucide-react';
 import { useWhatsAppProfile } from '@/hooks/useWhatsAppProfile';
+import LocationSelector from './LocationSelector';
 interface ProfileVerificationProps {
   onComplete: (data: {
     phone: string;
     gender: string;
     name: string;
     age: string;
+    location?: string;
     profilePhoto?: string;
+    userPhotos?: string[];
   }) => void;
 }
 
-type Step = 'gender' | 'age' | 'name' | 'phone';
+type Step = 'gender' | 'age' | 'name' | 'location' | 'photos' | 'phone';
 
 const ProfileVerification = ({
   onComplete
@@ -25,6 +28,8 @@ const ProfileVerification = ({
   const [gender, setGender] = useState('');
   const [age, setAge] = useState('');
   const [name, setName] = useState('');
+  const [location, setLocation] = useState('');
+  const [userPhotos, setUserPhotos] = useState<string[]>([]);
   const [phone, setPhone] = useState('');
   const [profilePhoto, setProfilePhoto] = useState<string | undefined>();
   
@@ -33,8 +38,13 @@ const ProfileVerification = ({
   const [isLoadingProfilePhoto, setIsLoadingProfilePhoto] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // Referência para gerenciar timeouts
+  // Estados para upload de fotos
+  const [uploadedPhotos, setUploadedPhotos] = useState<File[]>([]);
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
+  
+  // Referência para gerenciar timeouts e para input de arquivo
   const typingTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
   
   // Hook para buscar perfil do WhatsApp
   const { fetchProfile, isLoading: isWhatsAppLoading } = useWhatsAppProfile();
@@ -67,6 +77,14 @@ const ProfileVerification = ({
         break;
       case 'name':
         trackEvent("name_submitted", { name });
+        setCurrentStep('location');
+        break;
+      case 'location':
+        trackEvent("location_submitted", { location });
+        setCurrentStep('photos');
+        break;
+      case 'photos':
+        trackEvent("photos_submitted", { photosCount: photoPreviewUrls.length });
         setCurrentStep('phone');
         break;
       case 'phone':
@@ -83,10 +101,26 @@ const ProfileVerification = ({
       case 'name':
         setCurrentStep('age');
         break;
-      case 'phone':
+      case 'location':
         setCurrentStep('name');
         break;
+      case 'photos':
+        setCurrentStep('location');
+        break;
+      case 'phone':
+        setCurrentStep('photos');
+        break;
     }
+  };
+  
+  // Selecionar gênero e avançar automaticamente
+  const selectGender = (selected: string) => {
+    setGender(selected);
+    // Avançar automaticamente após selecionar o gênero
+    setTimeout(() => {
+      trackEvent("gender_selected", { gender: selected });
+      setCurrentStep('age');
+    }, 300); // Pequeno delay para mostrar a seleção antes de avançar
   };
   
   // Validação de cada etapa
@@ -98,6 +132,10 @@ const ProfileVerification = ({
         return !!age;
       case 'name':
         return !!name;
+      case 'location':
+        return !!location;
+      case 'photos':
+        return true; // Fotos são opcionais, sempre pode avançar
       case 'phone':
         return phone.length >= 10 && !isWhatsAppLoading;
       default:
@@ -141,32 +179,82 @@ const ProfileVerification = ({
   };
 
   const finalizeVerification = () => {
-    // Todos os dados foram coletados, finaliza o processo
-    trackEvent("verification_complete", {
-      phoneLength: phone.length,
+    // Verificar se todos os dados obrigatórios estão preenchidos
+    if (!gender || !age || !name || !phone) {
+      return;
+    }
+
+    // Registrar evento de conclusão no Clarity
+    trackEvent("verification_completed", {
       gender,
-      name,
       age,
-      hasProfilePhoto: !!profilePhoto
-    });
-    
-    onComplete({
+      name,
+      location,
       phone,
+      hasProfilePhoto: !!profilePhoto,
+      hasUserPhotos: photoPreviewUrls.length > 0,
+      userPhotosCount: photoPreviewUrls.length
+    });
+
+    // Chamar o callback de conclusão
+    onComplete({
       gender,
+      age, 
       name,
-      age,
-      profilePhoto
+      phone,
+      location,
+      profilePhoto,
+      userPhotos: photoPreviewUrls
     });
   };
 
   const formatPhone = (value: string) => {
-    const numbers = value.replace(/\D/g, '');
-    setPhone(numbers);
+    // Remover todos os caracteres não numéricos
+    const numericValue = value.replace(/\D/g, '');
+    setPhone(numericValue);
     
-    // Limpar timeout anterior se existir
+    // Limpar erro quando o usuário começar a digitar
+    if (error) setError(null);
+
+    // Cancelar qualquer timeout pendente
     if (typingTimeoutRef.current) {
       clearTimeout(typingTimeoutRef.current);
     }
+  };
+  
+  // Função para lidar com a seleção de arquivos
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    
+    const selectedFiles = Array.from(e.target.files);
+    
+    // Limitar a 3 fotos
+    const filesToAdd = selectedFiles.slice(0, 3 - uploadedPhotos.length);
+    if (filesToAdd.length < selectedFiles.length) {
+      setError('Máximo de 3 fotos permitido');
+      setTimeout(() => setError(null), 3000);
+    }
+    
+    setUploadedPhotos(prev => [...prev, ...filesToAdd]);
+    
+    // Criar URLs temporárias para preview
+    const newPreviewUrls = filesToAdd.map(file => URL.createObjectURL(file));
+    setPhotoPreviewUrls(prev => [...prev, ...newPreviewUrls]);
+  };
+  
+  // Função para remover uma foto
+  const removePhoto = (index: number) => {
+    // Revogar a URL para evitar vazamento de memória
+    URL.revokeObjectURL(photoPreviewUrls[index]);
+    
+    setPhotoPreviewUrls(prev => prev.filter((_, i) => i !== index));
+    setUploadedPhotos(prev => prev.filter((_, i) => i !== index));
+  };
+  
+  // Função para lidar com a seleção de localização
+  const handleLocationSelected = (selectedLocation: string) => {
+    setLocation(selectedLocation);
+    // Já que removemos o botão de confirmar, usamos o valor imediatamente
   };
 
   // Limpa o timeout quando o componente for desmontado
@@ -178,26 +266,29 @@ const ProfileVerification = ({
     };
   }, []);
 
+  // Calcular o progresso com base na etapa atual
+  const calculateProgress = () => {
+    switch (currentStep) {
+      case 'gender': return 16;
+      case 'age': return 33;
+      case 'name': return 50;
+      case 'location': return 66;
+      case 'photos': return 83;
+      case 'phone': return 100;
+      default: return 0;
+    }
+  };
+  
   // Barra de progresso para mostrar em qual etapa está
   const renderProgressBar = () => {
-    const steps = ['Gênero', 'Idade', 'Nome', 'Telefone'];
-    let currentStepIndex = 0;
-    
-    switch (currentStep) {
-      case 'gender': currentStepIndex = 0; break;
-      case 'age': currentStepIndex = 1; break;
-      case 'name': currentStepIndex = 2; break;
-      case 'phone': currentStepIndex = 3; break;
-    }
+    const progress = calculateProgress();
     
     return (
-      <div className="flex justify-between mb-6">
-        {steps.map((step, index) => (
-          <div key={step} className="flex flex-col items-center w-full">
-            <div className={`w-full h-2 ${index === 0 ? 'rounded-l-full' : ''} ${index === steps.length - 1 ? 'rounded-r-full' : ''} ${index <= currentStepIndex ? 'bg-pink-600' : 'bg-gray-600'}`} />
-            <span className={`text-xs mt-1 ${index <= currentStepIndex ? 'text-pink-500 font-medium' : 'text-gray-400'}`}>{step}</span>
-          </div>
-        ))}
+      <div className="w-full bg-gray-700 h-2 rounded-full mb-6">
+        <div 
+          className="bg-gradient-to-r from-pink-400 to-pink-600 h-2 rounded-full transition-all duration-500 ease-in-out" 
+          style={{ width: `${progress}%` }}
+        />
       </div>
     );
   };
@@ -205,23 +296,162 @@ const ProfileVerification = ({
   // Renderizar a etapa de seleção de gênero
   const renderGenderStep = () => {
     return (
-      <div className="space-y-4">
-        <div className="grid grid-cols-3 gap-3">
-          {['Homem', 'Mulher', 'Outro'].map(option => (
-            <Button 
-              key={option} 
-              onClick={() => setGender(option)} 
-              variant={gender === option ? "default" : "outline"} 
-              className={`p-5 text-base ${gender === option ? 'bg-pink-600 text-white' : 'bg-gray-700 border-gray-600 text-gray-300 hover:bg-gray-600'}`}
-            >
-              {option}
-            </Button>
-          ))}
+      <div className="flex flex-col space-y-4">
+        <div className="flex justify-center space-x-4">
+          <div 
+            onClick={() => selectGender('Homem')} 
+            className={`px-6 py-3 border rounded-md cursor-pointer transition-colors ${gender === 'Homem' ? 'bg-pink-500 text-white border-pink-700' : 'bg-gray-700 border-gray-600'}`}>
+            Homem
+          </div>
+          <div 
+            onClick={() => selectGender('Mulher')} 
+            className={`px-6 py-3 border rounded-md cursor-pointer transition-colors ${gender === 'Mulher' ? 'bg-pink-500 text-white border-pink-700' : 'bg-gray-700 border-gray-600'}`}>
+            Mulher
+          </div>
+          <div 
+            onClick={() => selectGender('Outro')} 
+            className={`px-6 py-3 border rounded-md cursor-pointer transition-colors ${gender === 'Outro' ? 'bg-pink-500 text-white border-pink-700' : 'bg-gray-700 border-gray-600'}`}>
+            Outro
+          </div>
         </div>
       </div>
     );
   };
   
+  // Renderizar a etapa de localização
+  const renderLocationStep = () => {
+    return (
+      <div className="space-y-4">
+        <LocationSelector 
+          onLocationSelected={handleLocationSelected} 
+          className="" 
+        />
+      </div>
+    );
+  };
+  
+  // Renderizar a etapa de upload de fotos
+  const renderPhotosStep = () => {
+    return (
+      <div className="space-y-6">
+        {/* Alerta de últimas horas */}
+        <div className="bg-red-600 p-3 rounded-lg text-white font-bold text-center">
+          🚨 ÚLTIMAS HORAS: Restam algumas verificações gratuitas restantes!
+        </div>
+        
+        {/* Seção principal destacada */}
+        <div className="border-2 border-white p-4 rounded-lg">
+          <div className="bg-blue-900 p-3 rounded text-center text-white font-bold mb-3">
+            🔍 DESCOBRIR A VERDADE AGORA
+          </div>
+          
+          <p className="text-white text-center mb-4">
+            "Veja se seu parceiro(a) tem perfis<br />
+             secretos que você não conhece"
+          </p>
+        </div>
+        
+        {/* Texto sobre intuição */}
+        <div className="text-white mb-4">
+          <h3 className="text-pink-500 font-bold mb-2">💔 SUA INTUIÇÃO ESTAVA CERTA?</h3>
+          <p className="text-sm">
+            Se você chegou até aqui, é porque algo não está
+            certo. Pare de sofrer com dúvidas - descubra a
+            verdade em 2 minutos.
+          </p>
+        </div>
+        
+        {/* Seção de upload */}
+        <div>
+          <h3 className="text-yellow-400 font-bold mb-2">📸 ADICIONE UMA FOTO E DESCUBRA TUDO</h3>
+          
+          {/* Área de preview das fotos */}
+          <div className="flex justify-center flex-wrap gap-3 mb-4 bg-gray-800/50 p-4 rounded-lg border border-dashed border-gray-500">
+            {photoPreviewUrls.map((url, index) => (
+              <div key={index} className="relative w-20 h-20">
+                <img 
+                  src={url} 
+                  alt={`Foto ${index + 1}`} 
+                  className="w-full h-full object-cover rounded-md border border-gray-600" 
+                />
+                <button
+                  onClick={() => removePhoto(index)}
+                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-6 h-6 flex items-center justify-center"
+                  title="Remover foto"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+            
+            {photoPreviewUrls.length === 0 && (
+              <div className="text-center py-6 w-full">
+              </div>
+            )}
+          </div>
+          
+          {/* Input de arquivo oculto */}
+          <input 
+            type="file" 
+            ref={fileInputRef} 
+            className="hidden" 
+            accept="image/*" 
+            multiple 
+            onChange={handleFileSelect} 
+          />
+          
+          {error && <p className="text-red-400 text-sm mt-2 text-center">{error}</p>}
+          
+          <div className="flex justify-center my-4">
+            <button 
+              onClick={() => fileInputRef.current?.click()}
+              className="bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 text-white font-bold py-3 px-6 w-full rounded-lg shadow-lg animate-pulse transform transition-transform hover:scale-105"
+            >
+              📤 SELECIONAR FOTOS - DESCOBRIR AGORA
+            </button>
+          </div>
+          
+          <div className="space-y-4">
+            <p className="text-white text-sm">
+              Nossa IA militar irá escanear instantaneamente:
+            </p>
+            
+            <ul className="space-y-2">
+              <li className="text-green-400 flex items-start">
+                <CheckCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+                <span>Tinder, Bumble, Happn (apps de relacionamento)</span>
+              </li>
+              <li className="text-green-400 flex items-start">
+                <CheckCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+                <span>Instagram, Facebook, TikTok (contas secretas)</span>
+              </li>
+              <li className="text-green-400 flex items-start">
+                <CheckCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+                <span>OnlyFans, sites adultos (perfis ocultos)</span>
+              </li>
+              <li className="text-green-400 flex items-start">
+                <CheckCircle className="w-4 h-4 mr-2 mt-0.5 flex-shrink-0" />
+                <span>Mais de 200 plataformas digitais</span>
+              </li>
+            </ul>
+            
+
+            
+            <div className="space-y-2 text-center">
+              <p className="text-yellow-400 font-semibold">💡 UMA FOTO = INVESTIGAÇÃO COMPLETA</p>
+              <p className="text-white text-sm">🔒 Suas fotos são criptografadas e deletadas após uso</p>
+              <p className="text-white text-sm">⚡ Resultado em 30-90 segundos</p>
+            </div>
+            
+            <p className="text-yellow-500 text-sm text-center font-semibold mt-4">
+              ⚠️ "Clientes relatam: 89% descobrem algo que não sabiam sobre o parceiro"
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // Renderizar a etapa de idade
   const renderAgeStep = () => {
     return (
@@ -288,15 +518,19 @@ const ProfileVerification = ({
     );
   };
   
-  // Renderizar o conteúdo específico de cada etapa
-  const renderStepContent = () => {
+  // Renderizar a etapa atual baseado no estado
+  const renderCurrentStep = () => {
     switch (currentStep) {
-      case 'gender': 
+      case 'gender':
         return renderGenderStep();
       case 'age':
         return renderAgeStep();
       case 'name':
         return renderNameStep();
+      case 'location':
+        return renderLocationStep();
+      case 'photos':
+        return renderPhotosStep();
       case 'phone':
         return renderPhoneStep();
       default:
@@ -307,10 +541,7 @@ const ProfileVerification = ({
   return (
     <div className="min-h-screen flex items-center justify-center p-4">
       <div className="w-full max-w-md">
-        {/* Header com alerta */}
-        <div className="bg-yellow-500 text-black px-4 py-2 text-center font-medium rounded-t-lg">
-          ⚠️ Atenção: Restam apenas 8 testes gratuitos para hoje!
-        </div>
+        {/* Header sem alerta */}
 
         <Card className="bg-tinder-dark border-gray-700 text-white rounded-t-none">
           <CardContent className="p-6">
@@ -321,6 +552,8 @@ const ProfileVerification = ({
               {currentStep === 'gender' && "Selecione o gênero do(a) parceiro(a)"}
               {currentStep === 'age' && "Qual a idade do(a) parceiro(a)?"}
               {currentStep === 'name' && "Qual o nome do(a) parceiro(a)?"}
+              {currentStep === 'location' && "Onde o(a) parceiro(a) costuma estar?"}
+              {currentStep === 'photos' && ""}
               {currentStep === 'phone' && "Digite o número do WhatsApp para verificação"}
             </p>
             
@@ -328,23 +561,14 @@ const ProfileVerification = ({
             {renderProgressBar()}
             
             {/* Conteúdo específico da etapa */}
-            {renderStepContent()}
+            {renderCurrentStep()}
             
-            {/* Botões de navegação */}
-            <div className="flex space-x-3 mt-6">
-              {currentStep !== 'gender' && (
-                <Button 
-                  onClick={goToPreviousStep}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white" 
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" /> Voltar
-                </Button>
-              )}
-              
+            {/* Botão de navegação (sem o botão de voltar) */}
+            <div className="flex mt-6">
               <Button 
                 onClick={goToNextStep}
                 disabled={!canProceed()}
-                className="flex-1 bg-gradient-to-r from-pink-500 to-pink-700 hover:from-pink-600 hover:to-pink-800 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
+                className="w-full bg-gradient-to-r from-pink-500 to-pink-700 hover:from-pink-600 hover:to-pink-800 text-white font-bold py-3 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105"
               >
                 {currentStep === 'phone' ? (
                   isWhatsAppLoading || isLoadingProfilePhoto ? (
