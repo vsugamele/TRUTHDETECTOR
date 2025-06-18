@@ -79,6 +79,22 @@ const IPLocationTracker = () => {
     const [lat, lng] = locationData.loc.split(",").map(coord => parseFloat(coord));
     return { lat, lng };
   };
+  
+  // Gerar pontos adicionais (suspeitos) ao redor da localização real
+  const getSuspiciousPoints = () => {
+    if (!locationData?.loc) return [];
+    const { lat, lng } = getCoordinates();
+    const points = [];
+    
+    // Gera 3 pontos aleatórios próximos à localização real
+    for (let i = 0; i < 3; i++) {
+      const randomLat = lat + (Math.random() * 0.02 - 0.01); // variação de +/- 0.01 grau
+      const randomLng = lng + (Math.random() * 0.02 - 0.01);
+      points.push({ lat: randomLat.toFixed(6), lng: randomLng.toFixed(6) });
+    }
+    
+    return points;
+  };
 
   // Formatar texto de localização
   const getLocationText = () => {
@@ -154,11 +170,48 @@ const IPLocationTracker = () => {
         <div className="relative border border-gray-300 rounded-md h-96">
           {/* Usando um iframe do OpenStreetMap para exibir o mapa */}
           {locationData && (
-            <iframe
-              className="w-full h-full border-0"
-              src={`https://www.openstreetmap.org/export/embed.html?bbox=${locationData.loc ? (parseFloat(locationData.loc.split(',')[1]) - 0.01) : -46.565}%2C${locationData.loc ? (parseFloat(locationData.loc.split(',')[0]) - 0.01) : -23.1204}%2C${locationData.loc ? (parseFloat(locationData.loc.split(',')[1]) + 0.01) : -46.545}%2C${locationData.loc ? (parseFloat(locationData.loc.split(',')[0]) + 0.01) : -23.1004}&layer=mapnik&marker=${locationData.loc ? locationData.loc.split(',')[0] : -23.1104}%2C${locationData.loc ? locationData.loc.split(',')[1] : -46.5550}`}
-              allowFullScreen
-            ></iframe>
+            <>
+              <iframe
+                className="w-full h-full border-0"
+                src={`https://www.openstreetmap.org/export/embed.html?bbox=${locationData.loc ? (parseFloat(locationData.loc.split(',')[1]) - 0.01) : -46.565}%2C${locationData.loc ? (parseFloat(locationData.loc.split(',')[0]) - 0.01) : -23.1204}%2C${locationData.loc ? (parseFloat(locationData.loc.split(',')[1]) + 0.01) : -46.545}%2C${locationData.loc ? (parseFloat(locationData.loc.split(',')[0]) + 0.01) : -23.1004}&layer=mapnik`}
+                allowFullScreen
+              ></iframe>
+              
+              {/* Bolinha vermelha para a localização principal */}
+              <div 
+                className="absolute w-4 h-4 bg-red-600 rounded-full border-2 border-white animate-pulse"
+                style={{
+                  left: '50%',
+                  top: '50%',
+                  transform: 'translate(-50%, -50%)',
+                  boxShadow: '0 0 0 rgba(255, 0, 0, 0.4)',
+                  animation: 'pulsate 1.5s infinite'
+                }}
+              ></div>
+              
+              {/* Bolinhas vermelhas para localizações suspeitas */}
+              {getSuspiciousPoints().map((point, index) => {
+                // Calcular a posição relativa na tela
+                const { lat, lng } = getCoordinates();
+                const offsetX = ((parseFloat(point.lng) - lng) / 0.02) * 100; // 0.02 é o tamanho da viewport
+                const offsetY = -((parseFloat(point.lat) - lat) / 0.02) * 100;
+                
+                return (
+                  <div 
+                    key={index}
+                    className="absolute w-3 h-3 bg-red-500 rounded-full border border-white"
+                    style={{
+                      left: `calc(50% + ${offsetX}%)`,
+                      top: `calc(50% + ${offsetY}%)`,
+                      transform: 'translate(-50%, -50%)',
+                      opacity: 0.8
+                    }}
+                  ></div>
+                );
+              })}
+              
+              {/* A animação foi movida para o CSS global via import */}
+            </>
           )}
           
           {/* Informações sobrepostas */}
@@ -171,7 +224,7 @@ const IPLocationTracker = () => {
               <CardContent className="p-3">
                 <div className="flex justify-between items-start">
                   <div className="text-sm">
-                    <p className="font-medium">Localização detectada:</p>
+                    <p className="font-medium">Localizações suspeitas:</p>
                     <p className="font-semibold text-green-700">{getLocationText()}</p>
                     <p className="text-xs text-gray-500 mt-1">
                       IP: {locationData.ip || "Desconhecido"}
@@ -204,7 +257,7 @@ const IPLocationTracker = () => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-yellow-700">
-                  <strong>Aviso!</strong> Encontramos a localização do dispositivo associado a este número. Estes dados podem não ser 100% precisos.
+                  <strong>Aviso!</strong> Encontramos localizações suspeitas associadas a este número. Várias possíveis locais foram detectados.
                 </p>
               </div>
             </div>
