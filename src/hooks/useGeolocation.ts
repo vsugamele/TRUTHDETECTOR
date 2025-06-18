@@ -8,6 +8,8 @@ interface GeolocationData {
   isLoading: boolean;
   error: string | null;
   isLocalEnvironment: boolean;
+  ipAddress?: string;
+  lastUpdated?: number;
 }
 
 // Lista de cidades brasileiras para fallback
@@ -36,43 +38,32 @@ export const useGeolocation = () => {
   });
 
   useEffect(() => {
-    const fetchGeolocation = async () => {
-      try {
-        // Verifica se está em ambiente local/desenvolvimento
-        const isLocalhost = 
-          window.location.hostname === 'localhost' || 
-          window.location.hostname === '127.0.0.1' || 
-          window.location.hostname.includes('192.168.');
+    const isLocalhost = 
+      window.location.hostname === 'localhost' || 
+      window.location.hostname === '127.0.0.1' || 
+      window.location.hostname.includes('192.168.');
 
-        if (isLocalhost) {
-          // Em ambiente local, use dados fictícios
-          const randomCity = BRAZILIAN_CITIES[Math.floor(Math.random() * BRAZILIAN_CITIES.length)];
-          setGeoData({
-            city: randomCity.city,
-            region: randomCity.region,
-            country: 'BR',
-            countryName: 'Brasil',
-            isLoading: false,
-            error: null,
-            isLocalEnvironment: true
-          });
-          return;
-        }
+    // Em ambiente local, usar dados simulados
+    if (isLocalhost) {
+      // Use uma cidade brasileira aleatória
+      const randomCity = BRAZILIAN_CITIES[Math.floor(Math.random() * BRAZILIAN_CITIES.length)];
+      
+      setGeoData({
+        city: randomCity.city,
+        region: randomCity.region,
+        country: 'BR',
+        countryName: 'Brasil',
+        isLoading: false,
+        error: null,
+        isLocalEnvironment: true
+      });
+      return;
+    }
 
-        // Tentativa com ipapi.co
-        const response = await fetch('https://ipapi.co/json/');
-        
-        if (!response.ok) {
-          throw new Error('Falha ao obter dados de localização');
-        }
-        
-        const data = await response.json();
-
-        // Se os dados principais estão vazios, considere como falha
-        if (!data.city && !data.region && !data.country_name) {
-          throw new Error('Dados de localização insuficientes');
-        }
-        
+    // Versão simplificada usando ipapi.co conforme exemplo fornecido
+    fetch('https://ipapi.co/json/')
+      .then(response => response.json())
+      .then(data => {
         setGeoData({
           city: data.city || '',
           region: data.region || '',
@@ -80,12 +71,14 @@ export const useGeolocation = () => {
           countryName: data.country_name || '',
           isLoading: false,
           error: null,
-          isLocalEnvironment: false
+          isLocalEnvironment: false,
+          ipAddress: data.ip
         });
-      } catch (error) {
-        console.error('Erro ao buscar geolocalização:', error);
+      })
+      .catch(error => {
+        console.error('Erro ao obter localização:', error);
         
-        // Fallback para uma cidade aleatória no Brasil
+        // Fallback para uma cidade brasileira aleatória
         const randomCity = BRAZILIAN_CITIES[Math.floor(Math.random() * BRAZILIAN_CITIES.length)];
         
         setGeoData({
@@ -95,12 +88,9 @@ export const useGeolocation = () => {
           countryName: 'Brasil',
           isLoading: false,
           error: 'Usando localização aproximada',
-          isLocalEnvironment: true
+          isLocalEnvironment: false
         });
-      }
-    };
-
-    fetchGeolocation();
+      });
   }, []);
 
   return geoData;
