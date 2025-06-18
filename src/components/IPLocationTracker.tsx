@@ -99,7 +99,8 @@ const IPLocationTracker = () => {
   // Formatar texto de localização
   const getLocationText = () => {
     if (!locationData) return "Localização indisponível";
-    return `${locationData.city || "Cidade desconhecida"}, ${locationData.region || "Região desconhecida"}, ${locationData.country || "País desconhecido"}`;
+    // Texto personalizado para o card de informação
+    return "Localizações suspeitas detectadas";
   };
   
   // Texto para cada etapa da busca
