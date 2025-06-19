@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, MapPin, AlertTriangle, CheckCircle, MessageCircle, Eye, Info } from 'lucide-react';
+import "./highlight.css"; // Importando o CSS para o efeito de highlight-pulse
 
 interface ActivityMonitorProps {
   onViewRegistryClick?: () => void;
@@ -155,7 +156,7 @@ const ActivityMonitor = ({ onViewRegistryClick }: ActivityMonitorProps) => {
               </div>
             </div>
             
-            <div className="border-t border-gray-800 pt-2 mt-2">
+            <div className="border-t border-gray-800 pt-2 mt-2" id="oferta-valor">
               <div className="flex items-start">
                 <div className="text-blue-400 mr-2">💡</div>
                 <div>
@@ -165,7 +166,18 @@ const ActivityMonitor = ({ onViewRegistryClick }: ActivityMonitorProps) => {
               </div>
             </div>
             
-            <button className="w-full mt-3 bg-black border border-gray-700 text-white py-2 hover:bg-gray-900 flex items-center justify-center">
+            <button 
+              onClick={() => {
+                const ofertaValor = document.getElementById('oferta-valor');
+                if (ofertaValor) {
+                  ofertaValor.scrollIntoView({ behavior: 'smooth' });
+                  // Destacar temporariamente a seção
+                  ofertaValor.classList.add('highlight-pulse');
+                  setTimeout(() => ofertaValor.classList.remove('highlight-pulse'), 3000);
+                }
+              }}
+              className="w-full mt-3 bg-black border border-gray-700 text-white py-2 hover:bg-gray-900 flex items-center justify-center"
+            >
               <span>VER DETALHES COMPLETOS</span>
               <Eye className="h-4 w-4 ml-2" />
             </button>

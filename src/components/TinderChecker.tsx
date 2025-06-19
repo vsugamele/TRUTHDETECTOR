@@ -121,13 +121,15 @@ const TinderChecker = () => {
 
   const handlePurchaseReport = () => {
     trackEvent("click_purchase_report");
-    setCurrentStep('checkout');
     
-    // Primeiro garante que a página role para o topo quando abrir o checkout
+    // Na página de ofertas: primeiro rola para o topo da página
     window.scrollTo({
       top: 0,
-      behavior: 'smooth'
+      behavior: 'instant' // Rolagem instantânea para melhor experiência
     });
+    
+    // Em seguida muda para a página de checkout
+    setCurrentStep('checkout');
     
     // Usa setTimeout para dar tempo ao componente CheckoutPage de renderizar antes de rolar para o campo de email
     setTimeout(() => {
@@ -138,7 +140,7 @@ const TinderChecker = () => {
         emailSection.classList.add('highlight-pulse');
         setTimeout(() => emailSection.classList.remove('highlight-pulse'), 3000);
       }
-    }, 500);
+    }, 700); // Aumentado para 700ms para garantir tempo suficiente para renderização
   };
 
   const handlePaymentSuccess = () => {
