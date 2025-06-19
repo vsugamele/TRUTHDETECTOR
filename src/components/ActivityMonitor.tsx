@@ -1,7 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Clock, MapPin, AlertTriangle, CheckCircle, MessageCircle, Eye, Info } from 'lucide-react';
 
-const ActivityMonitor = () => {
+interface ActivityMonitorProps {
+  onViewRegistryClick?: () => void;
+}
+
+const ActivityMonitor = ({ onViewRegistryClick }: ActivityMonitorProps) => {
   // Estado para contador regressivo
   const [countdown, setCountdown] = useState<number>(237); // 3m 57s
   const [progress, setProgress] = useState<number>(67);
@@ -216,7 +220,10 @@ const ActivityMonitor = () => {
           </div>
         </div>
         
-        <button className="w-full bg-gradient-to-r from-red-700 to-red-900 hover:from-red-800 hover:to-red-950 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 border border-red-500">
+        <button 
+          onClick={onViewRegistryClick}
+          className="w-full bg-gradient-to-r from-red-700 to-red-900 hover:from-red-800 hover:to-red-950 text-white font-bold py-3 px-6 rounded-lg shadow-lg transition-all duration-300 transform hover:scale-105 border border-red-500"
+        >
           VER REGISTRO COMPLETO 🔐
         </button>
       </div>

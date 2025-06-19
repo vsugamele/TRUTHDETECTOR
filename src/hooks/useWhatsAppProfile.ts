@@ -1,8 +1,7 @@
-
 import { useState } from 'react';
 
 interface WhatsAppProfile {
-  photoUrl?: string;
+  photoUrl: string | null;
   number: string;
   hasPhoto: boolean;
 }
@@ -52,7 +51,9 @@ export const useWhatsAppProfile = () => {
         headers: {
           'x-rapidapi-key': RAPIDAPI_KEY,
           'x-rapidapi-host': RAPIDAPI_HOST
-        }
+        },
+        // Limita o tempo de espera para 5 segundos
+        signal: AbortSignal.timeout(5000)
       });
 
       if (!response.ok) {

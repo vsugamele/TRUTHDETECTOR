@@ -2,15 +2,23 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Shield, Copy, CheckCircle, Clock, MapPin, AlertCircle, Eye, Lock, MessageCircle, Users, BarChart, List, CreditCard, Info, Award, Star, Timer, ShieldCheck, CreditCard as CreditCardIcon, Heart, ThumbsUp, Zap, Search, Mail, Target, Check, Gift, X } from 'lucide-react';
+import { 
+  Shield, Copy, CheckCircle, Clock, MapPin, AlertCircle, Eye, Lock, 
+  MessageCircle, Users, BarChart, List, CreditCard, Info, Award, Star, 
+  Timer, ShieldCheck, CreditCard as CreditCardIcon, Heart, ThumbsUp, Zap, 
+  Search, Mail, Target, Check, Gift, X, Loader2, AlertTriangle, DollarSign 
+} from 'lucide-react';
 import { usePixApi } from '@/hooks/usePixApi';
+import "./highlight.css";
 
 interface CheckoutPageProps {
   userData: {
     phone: string;
     gender: string;
+    profilePhoto?: string;
   };
   onSuccess: () => void;
 }
@@ -42,6 +50,28 @@ const CheckoutPage = ({
   const [countdown, setCountdown] = useState({ hours: 23, minutes: 45, seconds: 12 });
   const [remainingSlots, setRemainingSlots] = useState(23);
   const [showExitPopup, setShowExitPopup] = useState(false);
+  
+  // Estado para os order bumps (ofertas adicionais)
+  const [orderBumps, setOrderBumps] = useState({
+    acessoVitalicio: false,  // Acesso vitalício ao aplicativo — R$ 19,00
+    rastreioGPS: false,      // Rastreie a localização da pessoa desejada 24 horas por dia via GPS — R$ 9,00
+    historicoWeb: false       // Links compartilhados e excluídos, histórico de navegação, logins e muito mais — R$ 9,00
+  });
+  
+  // Referência para a seção de email para scroll
+  const emailSectionRef = useRef<HTMLDivElement>(null);
+  
+  // Função para calcular o valor total com as ofertas adicionais selecionadas
+  const calculateTotalAmount = () => {
+    let baseAmount = 1990; // R$ 19,90 em centavos
+    
+    // Adicionar valores das ofertas selecionadas
+    if (orderBumps.acessoVitalicio) baseAmount += 1900; // R$ 19,00
+    if (orderBumps.rastreioGPS) baseAmount += 900;      // R$ 9,00
+    if (orderBumps.historicoWeb) baseAmount += 900;     // R$ 9,00
+    
+    return baseAmount;
+  };
   
   const {
     generatePix,
@@ -152,46 +182,69 @@ const CheckoutPage = ({
 
   const handleGeneratePix = async () => {
     if (!email) {
-      // Rastrear tentativa de gerar PIX sem e-mail
       trackEvent("generate_pix_without_email");
       return;
     }
     
-    // Rastrear início da geração de PIX
-    trackEvent("generate_pix_started", { email: email.split('@')[1] });
-
+    const totalAmount = calculateTotalAmount();
+    const selectedOffers = [];
+    
+    // Construir a descrição com as ofertas selecionadas
+    if (orderBumps.acessoVitalicio) selectedOffers.push("Acesso vitalício");
+    if (orderBumps.rastreioGPS) selectedOffers.push("Rastreio GPS");
+    if (orderBumps.historicoWeb) selectedOffers.push("Histórico web");
+    
+    // Criar descrição base com as ofertas adicionais
+    let description = "Relatório TinderChecker";
+    if (selectedOffers.length > 0) {
+      description += " + " + selectedOffers.join(", ");
+    }
+    
+    // Rastrear início da geração do PIX com detalhes das ofertas
+    trackEvent("generate_pix_started", { 
+      email,
+      totalAmount: totalAmount,
+      orderBumps: orderBumps,
+      selectedOffers: selectedOffers
+    });
+    
     const paymentData = {
-      amount: 1990,
-      description: "Relatório do Tinder",
+      amount: totalAmount,
+      description: description,
       customer: {
-        name: "Cliente Tinder",
+        name: email.split('@')[0],
         document: "00000000000",
         phone: userData.phone,
-        email
+        email: email
       },
       item: {
-        title: "Relatório Completo do Tinder",
-        price: 1990,
+        title: "Relatório TinderChecker",
+        price: totalAmount,
         quantity: 1
       },
       utm: utmParams || "tinder-checker"
     };
 
-    console.log('Generating PIX with UTM params:', utmParams);
-    const response = await generatePix(paymentData);
-    if (response) {
-      setPixCode(response.pixCode);
-      setTransactionId(response.transactionId);
-      setShowPix(true);
+    try {
+      const response = await generatePix(paymentData);
+      if (response) {
+        setShowPix(true);
+        setPixCode(response.pixCode);
+        setTransactionId(response.transactionId);
+        
+        // Rastrear geração de PIX bem-sucedida
+        trackEvent("pix_generated_success", { 
+          transactionId: response.transactionId.substring(0, 8) + '...', 
+          amount: totalAmount,
+          selectedOffers: selectedOffers,
+          email: email.substring(0, 3) + '...'
+        });
+      }
+    } catch (err) {
+      console.error("Erro ao gerar PIX:", err);
       
-      // Rastrear PIX gerado com sucesso
-      trackEvent("pix_generated_success", {
-        transactionId: response.transactionId.substring(0, 8) + '...',
-        amount: paymentData.amount
-      });
-    } else {
-      // Rastrear erro na geração de PIX
-      trackEvent("pix_generation_failed", { hasError: !!error });
+      // Rastrear erro na geração do PIX
+      trackEvent("pix_generated_error", { error: err instanceof Error ? err.message : String(err) });
     }
   };
 
@@ -302,7 +355,7 @@ const CheckoutPage = ({
               </div>
               
               <div className="space-y-4">
-                <div>
+                <div id="email-section">
                   <div className="flex items-center text-blue-400 mb-1">
                     <Mail className="w-4 h-4 mr-1" />
                     <label className="block text-sm font-medium">ONDE ENVIAR SEU RELATÓRIO CONFIDENCIAL:</label>
@@ -330,12 +383,142 @@ const CheckoutPage = ({
                   </div>
                 </div>
 
+                {/* Order Bumps - Ofertas Adicionais */}
+                <div className="mt-6 mb-4 space-y-3">
+                  <div className="text-center">
+                    <h4 className="text-yellow-400 font-bold text-lg">OFERTAS ESPECIAIS</h4>
+                    <p className="text-gray-300 text-xs">Disponíveis apenas para novos usuários</p>
+                  </div>
+                  
+                  {/* Oferta 1: Acesso vitalício */}
+                  <div className="border border-yellow-600 rounded-lg overflow-hidden bg-gradient-to-r from-gray-900 to-gray-800">
+                    <div className="bg-yellow-600 text-black text-xs font-bold py-1 px-2 text-center">
+                      OFERTA LIMITADA
+                    </div>
+                    <div className="p-3">
+                      <div className="flex items-start">
+                        <input
+                          type="checkbox"
+                          id="orderBump1"
+                          className="mt-1 h-5 w-5 accent-yellow-500"
+                          checked={orderBumps.acessoVitalicio}
+                          onChange={(e) => {
+                            setOrderBumps(prev => ({...prev, acessoVitalicio: e.target.checked}));
+                            trackEvent("order_bump_toggle", { name: "acesso_vitalicio", selected: e.target.checked });
+                          }}
+                        />
+                        <label htmlFor="orderBump1" className="ml-2 cursor-pointer flex-1">
+                          <div className="font-semibold text-white">Acesso vitalício ao aplicativo</div>
+                          <div className="text-yellow-400 font-bold mt-1">+ R$ 19,00</div>
+                          <div className="text-xs text-gray-400 mt-1">✓ Sim, eu quero adicionar esta oferta.</div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Oferta 2: Rastreio GPS */}
+                  <div className="border border-yellow-600 rounded-lg overflow-hidden bg-gradient-to-r from-gray-900 to-gray-800">
+                    <div className="bg-yellow-600 text-black text-xs font-bold py-1 px-2 text-center">
+                      OFERTA LIMITADA
+                    </div>
+                    <div className="p-3">
+                      <div className="flex items-start">
+                        <input
+                          type="checkbox"
+                          id="orderBump2"
+                          className="mt-1 h-5 w-5 accent-yellow-500"
+                          checked={orderBumps.rastreioGPS}
+                          onChange={(e) => {
+                            setOrderBumps(prev => ({...prev, rastreioGPS: e.target.checked}));
+                            trackEvent("order_bump_toggle", { name: "rastreio_gps", selected: e.target.checked });
+                          }}
+                        />
+                        <label htmlFor="orderBump2" className="ml-2 cursor-pointer flex-1">
+                          <div className="font-semibold text-white">Rastreie a localização da pessoa desejada 24 horas por dia via GPS</div>
+                          <div className="text-yellow-400 font-bold mt-1">+ R$ 9,00</div>
+                          <div className="text-xs text-gray-400 mt-1">✓ Sim, eu quero adicionar esta oferta.</div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Oferta 3: Histórico Web */}
+                  <div className="border border-yellow-600 rounded-lg overflow-hidden bg-gradient-to-r from-gray-900 to-gray-800">
+                    <div className="bg-yellow-600 text-black text-xs font-bold py-1 px-2 text-center">
+                      OFERTA LIMITADA
+                    </div>
+                    <div className="p-3">
+                      <div className="flex items-start">
+                        <input
+                          type="checkbox"
+                          id="orderBump3"
+                          className="mt-1 h-5 w-5 accent-yellow-500"
+                          checked={orderBumps.historicoWeb}
+                          onChange={(e) => {
+                            setOrderBumps(prev => ({...prev, historicoWeb: e.target.checked}));
+                            trackEvent("order_bump_toggle", { name: "historico_web", selected: e.target.checked });
+                          }}
+                        />
+                        <label htmlFor="orderBump3" className="ml-2 cursor-pointer flex-1">
+                          <div className="font-semibold text-white">Links compartilhados e excluídos, histórico de navegação, logins e muito mais</div>
+                          <div className="text-yellow-400 font-bold mt-1">+ R$ 9,00</div>
+                          <div className="text-xs text-gray-400 mt-1">✓ Sim, eu quero adicionar esta oferta.</div>
+                        </label>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Resumo do pedido */}
+                <div className="mb-4 p-3 bg-gray-800/50 border border-blue-700/30 rounded-lg">
+                  <h3 className="text-center text-white font-bold mb-2">Resumo do Pedido</h3>
+                  <div className="space-y-2 mb-3">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-300">Relatório Completo</span>
+                      <span className="text-white">R$ 19,90</span>
+                    </div>
+                    
+                    {orderBumps.acessoVitalicio && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Acesso Vitalício</span>
+                        <span className="text-white">R$ 19,00</span>
+                      </div>
+                    )}
+                    
+                    {orderBumps.rastreioGPS && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Rastreio GPS</span>
+                        <span className="text-white">R$ 9,00</span>
+                      </div>
+                    )}
+                    
+                    {orderBumps.historicoWeb && (
+                      <div className="flex justify-between text-sm">
+                        <span className="text-gray-300">Histórico Web</span>
+                        <span className="text-white">R$ 9,00</span>
+                      </div>
+                    )}
+                    
+                    <div className="border-t border-gray-700 pt-2 mt-2 flex justify-between font-bold">
+                      <span className="text-white">Total:</span>
+                      <span className="text-green-500">R$ {(calculateTotalAmount() / 100).toFixed(2).replace('.', ',')}</span>
+                    </div>
+                  </div>
+                </div>
+
                 <Button 
                   onClick={handleGeneratePix} 
                   disabled={!email || isLoading} 
-                  className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-4 px-6 rounded-lg text-lg uppercase tracking-wide scale-105 transition-all duration-300 animate-pulse"
+                  className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-sm uppercase tracking-wide transition-all duration-300"
                 >
-                  {isLoading ? 'Gerando PIX...' : '🔥 DESCOBRIR A VERDADE AGORA - R$ 19,90'}
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin inline" />
+                      Gerando PIX...
+                    </>
+                  ) : (
+                    <>🔥 DESCOBRIR A VERDADE AGORA<br /><span className="text-yellow-200">R$ {(calculateTotalAmount() / 100).toFixed(2).replace('.', ',')}</span></>
+                  )}
                 </Button>
                 
                 <div className="text-center text-xs text-gray-300 -mt-1">

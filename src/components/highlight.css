@@ -1,0 +1,23 @@
+/* Animação de destaque para o campo de e-mail */
+@keyframes highlight-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(59, 130, 246, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(59, 130, 246, 0);
+  }
+}
+
+.highlight-pulse {
+  animation: highlight-pulse 1s infinite;
+  border: 2px solid #3b82f6;
+  border-radius: 0.375rem;
+}
+
+/* Estilo adicional para o campo de email quando destacado */
+#email-section.highlight-pulse input {
+  border-color: #3b82f6;
+}

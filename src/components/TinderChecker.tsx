@@ -9,9 +9,10 @@ import ProfileVerification from './ProfileVerification';
 import AnalyzingProfile from './AnalyzingProfile';
 import ProfileResults from './ProfileResults';
 import CheckoutPage from './CheckoutPage';
+import LiveNotifications from './LiveNotifications';
 import ActivityMonitor from './ActivityMonitor';
 
-type Step = 'landing' | 'verification' | 'analyzing' | 'results' | 'checkout' | 'success';
+type Step = 'landing' | 'confirmation' | 'verification' | 'analyzing' | 'results' | 'checkout' | 'success';
 
 interface UserData {
   phone: string;
@@ -63,6 +64,9 @@ const TinderChecker = () => {
       case 'landing':
         trackEvent("view_landing_page");
         break;
+      case 'confirmation':
+        trackEvent("view_confirmation_page");
+        break;
       case 'verification':
         trackEvent("view_verification_page");
         break;
@@ -83,6 +87,11 @@ const TinderChecker = () => {
 
   const handleStartVerification = () => {
     trackEvent("click_start_verification");
+    setCurrentStep('confirmation');
+  };
+
+  const handleConfirmationComplete = () => {
+    trackEvent("confirmation_complete");
     setCurrentStep('verification');
   };
 
@@ -113,6 +122,23 @@ const TinderChecker = () => {
   const handlePurchaseReport = () => {
     trackEvent("click_purchase_report");
     setCurrentStep('checkout');
+    
+    // Primeiro garante que a página role para o topo quando abrir o checkout
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
+    
+    // Usa setTimeout para dar tempo ao componente CheckoutPage de renderizar antes de rolar para o campo de email
+    setTimeout(() => {
+      const emailSection = document.getElementById('email-section');
+      if (emailSection) {
+        emailSection.scrollIntoView({ behavior: 'smooth' });
+        // Destaque temporário para o campo de email
+        emailSection.classList.add('highlight-pulse');
+        setTimeout(() => emailSection.classList.remove('highlight-pulse'), 3000);
+      }
+    }, 500);
   };
 
   const handlePaymentSuccess = () => {
@@ -124,8 +150,14 @@ const TinderChecker = () => {
     switch (currentStep) {
       case 'landing':
         return <LandingPage onStart={handleStartVerification} />;
+      case 'confirmation':
+        return <ConfirmationPage onContinue={handleConfirmationComplete} />;
       case 'verification':
-        return <ProfileVerification onComplete={handleVerificationComplete} />;
+        return (
+          <ProfileVerification 
+            onComplete={handleVerificationComplete} 
+          />
+        );
       case 'analyzing':
         return <AnalyzingProfile onComplete={handleAnalysisComplete} />;
       case 'results':
@@ -142,6 +174,8 @@ const TinderChecker = () => {
   return (
     <div className="min-h-screen bg-gradient-tinder-dark">
       {renderStep()}
+      {/* Componente de notificações ao vivo que aparecem no canto da tela */}
+      <LiveNotifications />
     </div>
   );
 };
@@ -161,7 +195,7 @@ const LandingPage = ({ onStart }: { onStart: () => void }) => {
             </h1>
             
             <h2 className="text-xl text-white mb-6">
-              Em 90 segundos você terá acesso aos mesmos dados que detetives particulares usam
+              Em 30 segundos você terá acesso aos mesmos dados que detetives particulares usam
             </h2>
             
             {/* Botão principal destacado */}
@@ -451,6 +485,38 @@ const GeoAlert = () => {
   return (
     <div className="bg-black border-b border-red-900 text-red-500 px-4 py-2 text-center font-medium animate-pulse">
       ⚠️ Atenção: Restam apenas <span className="text-white">{remainingTests}</span> verificações de infidelidade hoje!
+    </div>
+  );
+};
+
+// Componente de confirmação que conterá os elementos da imagem
+const ConfirmationPage = ({ onContinue }: { onContinue: () => void }) => {
+  return (
+    <div className="min-h-screen flex flex-col">
+      <GeoAlert />
+      
+      <div className="flex-1 flex flex-col items-center justify-center p-4 bg-black">
+        <div className="w-full max-w-md">
+          {/* Alerta de verificações restantes */}
+          <div className="bg-red-600 text-white p-4 rounded-lg mb-4 text-center font-bold">
+            🕒 ÚLTIMAS HORAS: Restam algumas verificações gratuitas restantes!
+          </div>
+          
+          {/* Card com botão de descobrir */}
+          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 text-white shadow-lg text-center">
+            <Button 
+              onClick={onContinue}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded mb-3"
+            >
+              🔍 DESCOBRIR A VERDADE AGORA
+            </Button>
+            
+            <p className="text-sm text-gray-300">
+              "Veja se seu parceiro(a) tem perfis secretos que você não conhece"
+            </p>
+          </div>
+        </div>
+      </div>
     </div>
   );
 };

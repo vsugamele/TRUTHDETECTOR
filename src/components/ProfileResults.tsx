@@ -76,12 +76,25 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  // URLs das fotos embaçadas como exemplo
-  const blurredPhotos = [
-    'https://images.unsplash.com/photo-1494790108755-2616b612b5c4?w=200&h=200&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=200&fit=crop&crop=face',
-    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=face'
-  ];
+  // Prepara a lista de fotos a serem mostradas
+  const getPhotosToDisplay = () => {
+    // URLs das fotos embaçadas como exemplo
+    const defaultPhotos = [
+      'https://images.unsplash.com/photo-1494790108755-2616b612b5c4?w=200&h=200&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=200&fit=crop&crop=face',
+      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=face'
+    ];
+    
+    // Se temos a foto do usuário, substitui a primeira foto por ela
+    if (userData.profilePhoto) {
+      return [userData.profilePhoto, ...defaultPhotos.slice(0, 2)];
+    }
+    
+    // Caso contrário, retorna as fotos padrão
+    return defaultPhotos;
+  };
+  
+  const blurredPhotos = getPhotosToDisplay();
 
   return (
     <div className="min-h-screen p-4 bg-gradient-tinder-dark">
@@ -93,6 +106,19 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
           </div>
           
           <div className="p-6 text-center">
+            {/* Mostrar foto do usuário quando disponível */}
+            {userData.profilePhoto && (
+              <div className="flex justify-center mb-4">
+                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-blue-500">
+                  <img 
+                    src={userData.profilePhoto} 
+                    alt="Perfil" 
+                    className="w-full h-full object-cover"
+                  />
+                </div>
+              </div>
+            )}
+            
             <div className="mb-4 text-base font-bold text-white">
               <CheckCircle className="h-5 w-5 text-green-500 inline mr-2" /> 
               <span>7 ATIVIDADES SUSPEITAS CONFIRMADAS</span>
@@ -114,7 +140,7 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
         </div>
 
         {/* Monitor de atividades suspeitas */}
-        <ActivityMonitor />
+        <ActivityMonitor onViewRegistryClick={onPurchase} />
 
         {/* Fotos protegidas */}
         <Card className="bg-tinder-dark border-gray-700">

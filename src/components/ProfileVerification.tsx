@@ -152,6 +152,7 @@ const ProfileVerification = ({
     setError(null);
 
     try {
+      // Busca o perfil pelo número de telefone
       const profile = await fetchProfile(phone);
       
       // Sempre indica que encontrou o perfil, independente do resultado real
@@ -334,23 +335,6 @@ const ProfileVerification = ({
   const renderPhotosStep = () => {
     return (
       <div className="space-y-6">
-        {/* Alerta de últimas horas */}
-        <div className="bg-red-600 p-3 rounded-lg text-white font-bold text-center">
-          🚨 ÚLTIMAS HORAS: Restam algumas verificações gratuitas restantes!
-        </div>
-        
-        {/* Seção principal destacada */}
-        <div className="border-2 border-white p-4 rounded-lg">
-          <div className="bg-blue-900 p-3 rounded text-center text-white font-bold mb-3">
-            🔍 DESCOBRIR A VERDADE AGORA
-          </div>
-          
-          <p className="text-white text-center mb-4">
-            "Veja se seu parceiro(a) tem perfis<br />
-             secretos que você não conhece"
-          </p>
-        </div>
-        
         {/* Texto sobre intuição */}
         <div className="text-white mb-4">
           <h3 className="text-pink-500 font-bold mb-2">💔 SUA INTUIÇÃO ESTAVA CERTA?</h3>
