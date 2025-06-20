@@ -1,7 +1,7 @@
 import { useState } from 'react';
 
 interface WhatsAppProfile {
-  photoUrl: string | null;
+  photoUrl: string;
   number: string;
   hasPhoto: boolean;
 }
@@ -64,7 +64,7 @@ export const useWhatsAppProfile = () => {
       }
 
       const rawResponseText = await response.text();
-      let photoUrl = null;
+      let photoUrl = '';
 
       const contentType = response.headers.get('content-type');
       if (contentType && contentType.includes('application/json')) {
@@ -82,8 +82,11 @@ export const useWhatsAppProfile = () => {
         photoUrl = rawResponseText;
       }
 
+      // Log adicional para debug
+      console.log('useWhatsAppProfile - URL da foto encontrada:', photoUrl || 'Nenhuma foto encontrada');
+      
       return {
-        photoUrl,
+        photoUrl, // Agora sempre será string (vazia se não tiver foto)
         number: formatBrazilianNumber(phoneNumber),
         hasPhoto: !!photoUrl
       };

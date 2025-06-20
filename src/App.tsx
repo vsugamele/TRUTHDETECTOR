@@ -8,6 +8,7 @@ import NotFound from "./pages/NotFound";
 import PhoneTrackerPage from "./pages/PhoneTrackerPage";
 import IPTrackerPage from "./pages/IPTrackerPage";
 import MapTest from "./pages/MapTest";
+import WhatsAppTester from "./pages/WhatsAppTester";
 
 const queryClient = new QueryClient();
 
@@ -22,6 +23,7 @@ const App = () => (
           <Route path="/phone-tracker" element={<PhoneTrackerPage />} />
           <Route path="/ip-tracker" element={<IPTrackerPage />} />
           <Route path="/map-test" element={<MapTest />} />
+          <Route path="/whatsapp-test" element={<WhatsAppTester />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

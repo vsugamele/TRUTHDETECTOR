@@ -30,6 +30,13 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
   const [timeLeft, setTimeLeft] = useState(300);
   const checkoutSectionRef = React.useRef<HTMLDivElement>(null);
 
+  // Adicionar log para debug da recepção da userData
+  console.log("ProfileResults - userData recebida:", { 
+    ...userData,
+    hasProfilePhoto: !!userData.profilePhoto, 
+    profilePhotoURL: userData.profilePhoto 
+  });
+
   // Registrar visualização da página de resultados
   useEffect(() => {
     trackEvent("profile_results_viewed", {
@@ -78,15 +85,29 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
 
   // Prepara a lista de fotos a serem mostradas
   const getPhotosToDisplay = () => {
-    // URLs das fotos embaçadas como exemplo
-    const defaultPhotos = [
-      'https://images.unsplash.com/photo-1494790108755-2616b612b5c4?w=200&h=200&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=200&fit=crop&crop=face',
-      'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=face'
-    ];
+    // Escolhe as fotos com base no gênero selecionado
+    let defaultPhotos;
+    
+    if (userData.gender === 'Mulher') {
+      // Mostrar fotos de homens se a pessoa escolheu "Mulher"
+      defaultPhotos = [
+        'https://laisevip.com/wp-content/uploads/2025/06/male4.jpeg',
+        'https://laisevip.com/wp-content/uploads/2025/06/male2.jpeg',
+        'https://laisevip.com/wp-content/uploads/2025/06/male3.jpeg'
+      ];
+      console.log('Mostrando fotos de homens para usuária mulher');
+    } else {
+      // Mostrar fotos de mulheres para os demais gêneros
+      defaultPhotos = [
+        'https://images.unsplash.com/photo-1494790108755-2616b612b5c4?w=200&h=200&fit=crop&crop=face',
+        'https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=200&h=200&fit=crop&crop=face',
+        'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=200&h=200&fit=crop&crop=face'
+      ];
+      console.log('Mostrando fotos de mulheres para usuário(a): ' + userData.gender);
+    }
     
     // Se temos a foto do usuário, substitui a primeira foto por ela
-    if (userData.profilePhoto) {
+    if (userData.profilePhoto && userData.profilePhoto.length > 0 && userData.profilePhoto.startsWith('http')) {
       return [userData.profilePhoto, ...defaultPhotos.slice(0, 2)];
     }
     
@@ -106,15 +127,20 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
           </div>
           
           <div className="p-6 text-center">
-            {/* Mostrar foto do usuário quando disponível */}
-            {userData.profilePhoto && (
+            {/* Mostrar foto do usuário apenas quando disponível com URL válida */}
+            {userData.profilePhoto && userData.profilePhoto.length > 0 && userData.profilePhoto.startsWith('http') && (
               <div className="flex justify-center mb-4">
-                <div className="w-20 h-20 rounded-full overflow-hidden border-2 border-blue-500">
-                  <img 
-                    src={userData.profilePhoto} 
-                    alt="Perfil" 
-                    className="w-full h-full object-cover"
-                  />
+                <div className="relative">
+                  <div className="w-28 h-28 rounded-full overflow-hidden border-3 border-green-500 shadow-lg shadow-green-500/30">
+                    <img 
+                      src={userData.profilePhoto} 
+                      alt="Perfil" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-1">
+                    <CheckCircle className="h-4 w-4 text-white" />
+                  </div>
                 </div>
               </div>
             )}

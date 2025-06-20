@@ -96,6 +96,13 @@ const TinderChecker = () => {
   };
 
   const handleVerificationComplete = (data: UserData) => {
+    // Adicionando log para debug
+    console.log("Dados recebidos de ProfileVerification:", {
+      ...data,
+      hasProfilePhoto: !!data.profilePhoto,
+      profilePhotoURL: data.profilePhoto
+    });
+    
     trackEvent("verification_complete", {
       phoneLength: data.phone.length,
       gender: data.gender,
@@ -111,6 +118,13 @@ const TinderChecker = () => {
       age: data.age,
       profilePhoto: data.profilePhoto
     });
+    
+    // Log após atualizar o estado
+    console.log("Estado userData atualizado:", { 
+      hasProfilePhoto: !!data.profilePhoto,
+      profilePhotoURL: data.profilePhoto 
+    });
+    
     setCurrentStep('analyzing');
   };
 
@@ -512,6 +526,22 @@ const ConfirmationPage = ({ onContinue }: { onContinue: () => void }) => {
             >
               🔍 DESCOBRIR A VERDADE AGORA
             </Button>
+            
+            {/* Imagem adicionada abaixo do botão */}
+            <div className="my-4">
+              <img 
+                src="https://laisevip.com/wp-content/uploads/2025/06/f38d44c5-a437-4a6e-ba56-a78ffa23004a.jpg" 
+                alt="Imagem reveladora" 
+                className="w-full rounded-lg"
+                loading="lazy"
+              />
+            </div>
+            
+            {/* Caixa de alerta com aviso */}
+            <div className="bg-red-800 border-2 border-red-600 p-3 rounded-lg text-white mt-3 mb-4">
+              <AlertTriangle className="w-5 h-5 inline mr-2" />
+              <span className="font-bold">ALERTA:</span> A partir daqui você irá descobrir as informações mais ocultas do seu parceiro, continue apenas se você tem ciência desse risco.
+            </div>
             
             <p className="text-sm text-gray-300">
               "Veja se seu parceiro(a) tem perfis secretos que você não conhece"

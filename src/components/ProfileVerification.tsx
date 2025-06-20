@@ -151,24 +151,31 @@ const ProfileVerification = ({
     setIsLoadingProfilePhoto(true);
     setError(null);
 
+    console.log("ProfileVerification - Iniciando busca de foto para o telefone:", phone);
+
     try {
       // Busca o perfil pelo número de telefone
       const profile = await fetchProfile(phone);
       
+      console.log("ProfileVerification - Resposta da API:", profile);
+      
       // Sempre indica que encontrou o perfil, independente do resultado real
       setProfileVerified(true);
       
-      if (profile && profile.photoUrl) {
+      if (profile && profile.photoUrl && profile.photoUrl.length > 0) {
         // Se encontrou uma foto real
+        console.log("ProfileVerification - Foto encontrada:", profile.photoUrl);
         setProfilePhoto(profile.photoUrl);
         trackEvent("profile_photo_found");
       } else {
         // Se não encontrou foto, não mostra nenhuma imagem
-        setProfilePhoto(undefined);
+        console.log("ProfileVerification - Nenhuma foto encontrada");
+        setProfilePhoto(""); // Usando string vazia em vez de undefined
         trackEvent("profile_photo_not_found");
       }
       
       // Agora que todos os dados foram coletados, pode finalizar
+      console.log("ProfileVerification - Estado final antes de finalizar:", { profilePhoto });
       finalizeVerification();
       
     } catch (err) {
@@ -436,19 +443,25 @@ const ProfileVerification = ({
     );
   };
 
-  // Renderizar a etapa de idade
+  // Renderizar a etapa de idade com botões de faixa etária
   const renderAgeStep = () => {
+    const ageRanges = ["18-24", "25-32", "33-40", "41-50", "51-60", "60+"];
+    
     return (
       <div className="space-y-4">
-        <Input
-          type="number"
-          placeholder="Ex: 28"
-          value={age}
-          onChange={(e) => setAge(e.target.value)}
-          className="w-full bg-gray-700 border-gray-600 text-white text-center text-xl p-6"
-          min="18"
-          max="80"
-        />
+        <div className="grid grid-cols-2 gap-3">
+          {ageRanges.map((range) => (
+            <Button 
+              key={range} 
+              onClick={() => setAge(range)}
+              className={`py-3 px-4 text-lg font-medium ${age === range 
+                ? 'bg-pink-600 hover:bg-pink-700 text-white' 
+                : 'bg-gray-700 hover:bg-gray-600 text-gray-200'}`}
+            >
+              {range}
+            </Button>
+          ))}
+        </div>
       </div>
     );
   };

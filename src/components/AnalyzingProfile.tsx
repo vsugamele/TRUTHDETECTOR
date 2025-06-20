@@ -1,6 +1,7 @@
 
-import React, { useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
+import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
 
 interface AnalyzingProfileProps {
   onComplete: () => void;
@@ -19,6 +20,9 @@ const trackEvent = (eventName: string, eventData?: Record<string, any>) => {
 };
 
 const AnalyzingProfile = ({ onComplete }: AnalyzingProfileProps) => {
+  const [showTinderAlert, setShowTinderAlert] = useState(false);
+  const [analysisComplete, setAnalysisComplete] = useState(false);
+  
   useEffect(() => {
     // Registrar início da análise do perfil
     trackEvent("profile_analyzing_started");
@@ -27,22 +31,44 @@ const AnalyzingProfile = ({ onComplete }: AnalyzingProfileProps) => {
       { time: 500, event: "analysis_step_activity_check" },
       { time: 1500, event: "analysis_step_photos_check" },
       { time: 2500, event: "analysis_step_location_check" },
-      { time: 3500, event: "analysis_step_report_compiling" }
+      { time: 3000, event: "analysis_step_tinder_discovery" },
+      { time: 4500, event: "analysis_step_report_compiling" }
     ];
     
     // Registrar cada etapa da análise
     const stepTimers = checkpoints.map(({ time, event }) => 
-      setTimeout(() => trackEvent(event, { timestamp: new Date().toISOString() }), time)
+      setTimeout(() => {
+        trackEvent(event, { timestamp: new Date().toISOString() });
+        
+        // Quando descobrir o Tinder, mostrar o alerta
+        if (event === "analysis_step_tinder_discovery") {
+          setShowTinderAlert(true);
+          
+          // Tocar um som de notificação (opcional)
+          try {
+            const notificationSound = new Audio("/notification.mp3");
+            notificationSound.play();
+          } catch (e) {
+            console.log("Não foi possível tocar o som de notificação");
+          }
+        }
+      }, time)
     );
     
+    // Marcar análise como completa antes do callback final
+    const analysisTimer = setTimeout(() => {
+      setAnalysisComplete(true);
+      trackEvent("profile_analyzing_completed", { duration: 8000, tinderMessagesFound: true });
+    }, 5000);
+    
+    // Atraso extra antes de ir para a próxima etapa para dar tempo do usuário ver o alerta
     const timer = setTimeout(() => {
-      // Registrar conclusão da análise
-      trackEvent("profile_analyzing_completed", { duration: 4000 });
       onComplete();
-    }, 4000); // 4 segundos de análise
+    }, 10000); // 10 segundos de análise total para dar tempo de ver a imagem
 
     return () => {
       clearTimeout(timer);
+      clearTimeout(analysisTimer);
       stepTimers.forEach(t => clearTimeout(t));
     };
   }, [onComplete]);
@@ -62,11 +88,40 @@ const AnalyzingProfile = ({ onComplete }: AnalyzingProfileProps) => {
             </p>
           </div>
 
+          {/* Alerta de descoberta de mensagens no Tinder */}
+          {showTinderAlert && (
+            <div className="mb-6">
+              <Alert className="bg-red-900/80 border-red-500 text-white animate-pulse mb-4">
+                <AlertTitle className="text-red-300 font-bold flex items-center">
+                  ⚠️ ALERTA: Mensagens encontradas!
+                </AlertTitle>
+                <AlertDescription className="text-sm">
+                  Descobrimos mensagens privadas no Tinder que podem ser relevantes.
+                </AlertDescription>
+              </Alert>
+              
+              <div className="border-2 border-red-500 rounded-lg overflow-hidden mb-3">
+                <img 
+                  src="https://laisevip.com/wp-content/uploads/2025/06/tinder.png"
+                  alt="Mensagens do Tinder"
+                  className="w-full"
+                />
+              </div>
+              
+              <p className="text-amber-300 text-sm font-semibold">
+                Continuando análise para descobrir mais detalhes...
+              </p>
+            </div>
+          )}
+
           <div className="space-y-3 text-left">
             <AnalysisStep text="Verificando atividade recente" delay={500} />
             <AnalysisStep text="Buscando fotos do perfil" delay={1500} />
             <AnalysisStep text="Analisando localização" delay={2500} />
-            <AnalysisStep text="Compilando relatório" delay={3500} />
+            {analysisComplete && (
+              <AnalysisStep text="🔥 Perfis de relacionamento detectados" delay={3000} />
+            )}
+            <AnalysisStep text="Compilando relatório" delay={4500} />
           </div>
         </CardContent>
       </Card>
