@@ -9,10 +9,11 @@ import ProfileVerification from './ProfileVerification';
 import AnalyzingProfile from './AnalyzingProfile';
 import ProfileResults from './ProfileResults';
 import CheckoutPage from './CheckoutPage';
+import UpsellPage from './UpsellPage';
 import LiveNotifications from './LiveNotifications';
 import ActivityMonitor from './ActivityMonitor';
 
-type Step = 'landing' | 'confirmation' | 'verification' | 'analyzing' | 'results' | 'checkout' | 'success';
+type Step = 'landing' | 'confirmation' | 'verification' | 'analyzing' | 'results' | 'checkout' | 'upsell' | 'success';
 
 interface UserData {
   phone: string;
@@ -158,7 +159,37 @@ const TinderChecker = () => {
   };
 
   const handlePaymentSuccess = () => {
-    trackEvent("payment_success");
+    // Agora vai para a página de upsell em vez de success
+    setCurrentStep('upsell');
+    
+    // Rastrear conclusão do pagamento
+    trackEvent("payment_completed", {
+      flow: "tinder_checker",
+      gender: userData.gender,
+      ageGroup: userData.age
+    });
+  };
+  
+  // Funções para lidar com a aceitação ou recusa do upsell
+  const handleAcceptUpsell = () => {
+    // Lógica para processar a compra do upsell
+    trackEvent("upsell_accepted", {
+      gender: userData.gender,
+      ageGroup: userData.age
+    });
+    
+    // Redirecionar para página de sucesso
+    setCurrentStep('success');
+  };
+  
+  const handleDeclineUpsell = () => {
+    // Rastrear recusa do upsell
+    trackEvent("upsell_declined", {
+      gender: userData.gender,
+      ageGroup: userData.age
+    });
+    
+    // Redirecionar para página de sucesso mesmo assim
     setCurrentStep('success');
   };
 
@@ -169,17 +200,19 @@ const TinderChecker = () => {
       case 'confirmation':
         return <ConfirmationPage onContinue={handleConfirmationComplete} />;
       case 'verification':
-        return (
-          <ProfileVerification 
-            onComplete={handleVerificationComplete} 
-          />
-        );
+        return <ProfileVerification onComplete={handleVerificationComplete} />;
       case 'analyzing':
         return <AnalyzingProfile onComplete={handleAnalysisComplete} />;
       case 'results':
         return <ProfileResults userData={userData} onPurchase={handlePurchaseReport} />;
       case 'checkout':
         return <CheckoutPage userData={userData} onSuccess={handlePaymentSuccess} />;
+      case 'upsell':
+        return <UpsellPage 
+                 userData={userData} 
+                 onAccept={handleAcceptUpsell} 
+                 onDecline={handleDeclineUpsell}
+               />;
       case 'success':
         return <SuccessPage />;
       default:

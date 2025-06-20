@@ -9,6 +9,7 @@ import PhoneTrackerPage from "./pages/PhoneTrackerPage";
 import IPTrackerPage from "./pages/IPTrackerPage";
 import MapTest from "./pages/MapTest";
 import WhatsAppTester from "./pages/WhatsAppTester";
+import UpsellPage from './components/UpsellPage';
 
 const queryClient = new QueryClient();
 
@@ -24,6 +25,17 @@ const App = () => (
           <Route path="/ip-tracker" element={<IPTrackerPage />} />
           <Route path="/map-test" element={<MapTest />} />
           <Route path="/whatsapp-test" element={<WhatsAppTester />} />
+          <Route path="/upsell" element={<UpsellPage 
+            userData={{
+              phone: "11999999999",
+              gender: "Mulher",
+              name: "Teste",
+              age: "25",
+              email: "teste@exemplo.com"
+            }} 
+            onAccept={() => alert("Upgrade aceito!")} 
+            onDecline={() => alert("Upgrade recusado!")} 
+          />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
