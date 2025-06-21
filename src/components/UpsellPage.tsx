@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
   Shield, CheckCircle, AlertTriangle, Timer, Clock, 
-  Check, Star, Gift, Copy, Loader2
+  Check, Star, Gift, Copy, Loader2, QrCode
 } from 'lucide-react';
 import { usePixApi } from '@/hooks/usePixApi';
 
@@ -516,51 +516,59 @@ const UpsellPage: React.FC<UpsellPageProps> = ({ onAccept, onDecline, userData }
         </Card>
         
         {/* Revelação do preço e pagamento */}
-        <Card className="bg-black border-green-600 mb-6">
-          <CardContent className="p-6 text-center">
-            <h3 className="text-xl font-bold mb-2">Preço Especial Apenas Hoje:</h3>
-            <div className="text-4xl font-bold text-green-500 mb-4">
+        <Card className="bg-gradient-to-b from-gray-900 to-black border-2 border-green-500 mb-6 shadow-lg shadow-green-500/20">
+          <div className="bg-green-600 py-2 px-4 text-center">
+            <h3 className="text-lg font-bold text-white">OFERTA ESPECIAL - APENAS HOJE</h3>
+          </div>
+          <CardContent className="p-8 text-center">
+            <div className="mb-2 text-gray-300 text-sm uppercase font-medium">De <span className="line-through">R$ 49,90</span> por apenas:</div>
+            <div className="text-5xl font-bold text-white mb-2 bg-green-600 py-2 rounded-md shadow-lg">
               R$ 29,90
             </div>
-            <p className="text-sm mb-2">Pagamento único</p>
-            <div className="flex justify-center space-x-2 mb-4">
-              <Shield className="h-5 w-5 text-green-500" />
-              <span className="text-sm">Compra 100% Segura</span>
+            <p className="text-white font-medium mb-4 bg-gray-800 inline-block px-4 py-1 rounded-full">Pagamento único</p>
+            <div className="flex justify-center items-center space-x-3 mb-4 bg-gray-800 p-3 rounded-lg">
+              <Shield className="h-6 w-6 text-green-400" />
+              <span className="text-white font-medium">Compra 100% Segura</span>
             </div>
             
             {showPix ? (
-              <div className="border border-gray-700 rounded-md p-4 bg-gray-900">
-                <div className="text-lg font-bold text-white mb-3">Pague com PIX</div>
+              <div className="border-2 border-green-500 rounded-lg p-6 bg-gray-900 shadow-lg mt-4">
+                <div className="bg-green-600 py-2 px-3 rounded-md text-center mb-4">
+                  <div className="text-lg font-bold text-white flex items-center justify-center">
+                    <QrCode className="mr-2 h-5 w-5" /> PAGUE COM PIX
+                  </div>
+                </div>
                 
                 {isLoading ? (
-                  <div className="flex flex-col items-center justify-center py-4">
-                    <Loader2 className="h-10 w-10 text-green-500 animate-spin mb-2" />
-                    <p>Gerando código PIX...</p>
+                  <div className="flex flex-col items-center justify-center py-6 bg-gray-800 rounded-lg">
+                    <Loader2 className="h-12 w-12 text-green-500 animate-spin mb-2" />
+                    <p className="text-white font-medium">Gerando código PIX...</p>
                   </div>
                 ) : (
                   <>
-                    <div className="mb-3 p-3 bg-white rounded-md">
-                      <div className="text-black text-sm font-mono break-all">
+                    <div className="mb-4 p-4 bg-white rounded-lg shadow-inner border border-gray-200">
+                      <div className="text-black text-base font-mono break-all bg-gray-100 p-3 rounded">
                         {pixCode}
                       </div>
                     </div>
                     
                     <Button 
                       onClick={handleCopyPix} 
-                      className="w-full mb-3 bg-green-600 hover:bg-green-700 animate-pulse"
+                      className="w-full mb-4 bg-green-600 hover:bg-green-700 font-bold py-3 text-base shadow-lg shadow-green-900/40 border-b-4 border-green-700 transition-all hover:translate-y-1 hover:border-b-2"
+                      size="lg"
                     >
                       {copied ? (
-                        <span className="flex items-center">
-                          <CheckCircle className="h-5 w-5 mr-2" /> Código Copiado!
+                        <span className="flex items-center justify-center">
+                          <CheckCircle className="h-5 w-5 mr-2" /> CÓDIGO COPIADO!
                         </span>
                       ) : (
-                        <span className="flex items-center">
-                          <Copy className="h-5 w-5 mr-2" /> Copiar Código PIX
+                        <span className="flex items-center justify-center">
+                          <Copy className="h-5 w-5 mr-2" /> COPIAR CÓDIGO PIX
                         </span>
                       )}
                     </Button>
                     
-                    <div className="text-sm text-gray-400 mb-2">
+                    <div className="text-white bg-gray-800 rounded-lg p-3 mb-4 flex items-center justify-center">
                       Após o pagamento, você será automaticamente redirecionado
                     </div>
                     

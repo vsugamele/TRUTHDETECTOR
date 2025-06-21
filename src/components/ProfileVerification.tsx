@@ -179,13 +179,15 @@ const ProfileVerification = ({
         trackEvent("profile_photo_not_found");
       }
       
-      console.log("ProfileVerification - URL da foto antes de finalizar:", profile?.photoUrl || "Sem foto");
+      const photoUrlToPass = profile?.photoUrl || "";
+      console.log("ProfileVerification - URL da foto antes de finalizar:", photoUrlToPass);
       
-      // Pequeno timeout para garantir que o estado foi atualizado antes de finalizar
-      setTimeout(() => {
-        console.log("ProfileVerification - Estado final antes de finalizar:", { profilePhoto });
-        finalizeVerification();
-      }, 100);
+      // Atualizar o estado do profilePhoto para possíveis usos posteriores
+      setProfilePhoto(photoUrlToPass);
+      
+      // Passar a URL da foto diretamente para finalizeVerification
+      // para evitar problemas com a atualização assíncrona do estado
+      finalizeVerification(photoUrlToPass);
       
     } catch (err) {
       console.error("Erro ao buscar perfil:", err);
@@ -195,11 +197,15 @@ const ProfileVerification = ({
     }
   };
 
-  const finalizeVerification = () => {
+  const finalizeVerification = (directPhotoUrl?: string) => {
     // Verificar se todos os dados obrigatórios estão preenchidos
     if (!gender || !age || !name || !phone) {
       return;
     }
+
+    // Se foi passada uma URL direta para a foto, usamos ela em vez do estado
+    const photoToUse = directPhotoUrl || profilePhoto;
+    console.log("finalizeVerification - URL final da foto:", photoToUse);
 
     // Registrar evento de conclusão no Clarity
     trackEvent("verification_completed", {
@@ -208,19 +214,19 @@ const ProfileVerification = ({
       name,
       location,
       phone,
-      hasProfilePhoto: !!profilePhoto,
+      hasProfilePhoto: !!photoToUse,
       hasUserPhotos: photoPreviewUrls.length > 0,
       userPhotosCount: photoPreviewUrls.length
     });
 
-    // Chamar o callback de conclusão
+    // Chamar o callback de conclusão com os dados finais
     onComplete({
       gender,
       age, 
       name,
       phone,
       location,
-      profilePhoto,
+      profilePhoto: photoToUse, // Usando a URL direta ou o estado, o que estiver disponível
       userPhotos: photoPreviewUrls
     });
   };

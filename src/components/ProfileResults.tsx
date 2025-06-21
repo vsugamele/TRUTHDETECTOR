@@ -34,12 +34,21 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const checkoutSectionRef = React.useRef<HTMLDivElement>(null);
 
-  // Adicionar log para debug da recepção da userData
-  console.log("ProfileResults - userData recebida:", { 
+  // Adicionar log mais detalhado para debug da recepção da userData e URL da foto
+  console.log("ProfileResults - userData recebida", { 
     ...userData,
-    hasProfilePhoto: !!userData.profilePhoto, 
-    profilePhotoURL: userData.profilePhoto 
+    hasProfilePhoto: !!userData.profilePhoto,
+    profilePhotoURL: userData.profilePhoto,
+    profilePhotoType: userData.profilePhoto ? typeof userData.profilePhoto : 'undefined',
+    profilePhotoLength: userData.profilePhoto ? userData.profilePhoto.length : 0
   });
+  
+  // Log específico para a URL da foto
+  if (userData.profilePhoto) {
+    console.log("ProfileResults - URL da foto recebida:", userData.profilePhoto);
+  } else {
+    console.log("ProfileResults - Nenhuma URL de foto recebida");
+  }
 
   // Registrar visualização da página de resultados
   useEffect(() => {
