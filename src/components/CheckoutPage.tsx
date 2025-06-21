@@ -343,32 +343,6 @@ const CheckoutPage = ({
               </div>
               
               <div className="space-y-4">
-                <div id="email-section">
-                  <div className="flex items-center text-blue-400 mb-1">
-                    <Mail className="w-4 h-4 mr-1" />
-                    <label className="block text-sm font-medium">ONDE ENVIAR SEU RELATÓRIO CONFIDENCIAL:</label>
-                  </div>
-                  <Input 
-                    type="email" 
-                    placeholder="seu@email.com" 
-                    value={email} 
-                    onChange={e => setEmail(e.target.value)} 
-                    className="w-full bg-blue-900/20 border-blue-800 text-white" 
-                  />
-                </div>
-
-                <div className="flex flex-col space-y-1">
-                  <div className="flex items-center justify-center">
-                    <Lock className="w-3 h-3 text-green-400 mr-1" />
-                    <p className="text-xs text-gray-300">
-                      Seus dados são criptografados e nunca compartilhados.
-                    </p>
-                  </div>
-                  <div className="flex items-center justify-center">
-                    <Zap className="w-3 h-3 text-green-400 mr-1" />
-                    <p className="text-xs text-gray-300">Relatório chega em 30 segundos após pagamento</p>
-                  </div>
-                </div>
 
                 {/* Order Bumps - Ofertas Adicionais */}
                 <div className="mt-6 mb-4 space-y-3">
@@ -507,6 +481,35 @@ const CheckoutPage = ({
                     <>🔥 DESCOBRIR A VERDADE AGORA<br /><span className="text-yellow-200">R$ {(calculateTotalAmount() / 100).toFixed(2).replace('.', ',')}</span></>
                   )}
                 </Button>
+                
+                <div className="mt-4 p-4 border border-blue-700/30 rounded-lg bg-gray-900/70">
+                  <div id="email-section">
+                    <div className="flex items-center text-blue-400 mb-2">
+                      <Mail className="w-4 h-4 mr-2" />
+                      <label className="block text-sm font-medium">ONDE ENVIAR SEU RELATÓRIO CONFIDENCIAL:</label>
+                    </div>
+                    <Input 
+                      type="email" 
+                      placeholder="seu@email.com" 
+                      value={email} 
+                      onChange={e => setEmail(e.target.value)} 
+                      className="w-full bg-blue-900/20 border-blue-800 text-white mb-3" 
+                    />
+                  
+                    <div className="flex flex-col space-y-2 mt-2">
+                      <div className="flex items-center">
+                        <Lock className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
+                        <p className="text-sm text-gray-300">
+                          Seus dados são criptografados e nunca compartilhados.
+                        </p>
+                      </div>
+                      <div className="flex items-center">
+                        <Zap className="w-4 h-4 text-green-400 mr-2 flex-shrink-0" />
+                        <p className="text-sm text-gray-300">Relatório chega em 30 segundos após pagamento</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 
                 <div className="text-center text-xs text-gray-300 -mt-1">
                   └─ Acesso instantâneo • 100% seguro
