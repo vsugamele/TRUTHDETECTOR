@@ -169,8 +169,31 @@ const UpsellPage: React.FC<UpsellPageProps> = ({ onAccept, onDecline, userData }
 
   return (
     <div className="flex flex-col min-h-screen bg-gradient-to-b from-black to-red-950 text-white">
-      {/* Barra de progresso */}
+      {/* Perfil Encontrado */}
       <div className="px-4 py-3 bg-black border-b border-red-900">
+        <div className="flex items-center justify-center mb-4 mt-2">
+          <div className="bg-green-700 text-white text-xl font-bold py-2 px-6 rounded-lg animate-pulse flex items-center">
+            <CheckCircle className="h-6 w-6 mr-2 text-white" />
+            Perfil Encontrado!
+          </div>
+        </div>
+        
+        {userData.profilePhoto && (
+          <div className="flex justify-center mb-4">
+            <div className="relative">
+              <img 
+                src={userData.profilePhoto} 
+                alt="Perfil" 
+                className="w-24 h-24 rounded-full border-2 border-green-500 object-cover" 
+                onError={(e) => {
+                  const imgElement = e.target as HTMLImageElement;
+                  imgElement.style.display = 'none';
+                }}
+              />
+            </div>
+          </div>
+        )}
+        
         <div className="flex items-center justify-between text-sm mb-2">
           <span className="text-green-500">✓ Etapa 1 Concluída</span>
           <span className="text-green-500">✅ Etapa 2 em Andamento</span>

@@ -181,9 +181,14 @@ const CheckoutPage = ({
   }, [showPix, showExitPopup]);
 
   const handleGeneratePix = async () => {
+    // Usar um email válido para o processamento, mesmo que o campo esteja vazio
+    const emailToUse = email || "cliente@tinder-checker.com";
+    
     if (!email) {
+      // Rastreamos o evento e atualizamos o campo de email visualmente
       trackEvent("generate_pix_without_email");
-      return;
+      // Definir um email padrão para continuar o fluxo (só para atualizar a UI)
+      setEmail(emailToUse);
     }
     
     const totalAmount = calculateTotalAmount();
@@ -202,7 +207,7 @@ const CheckoutPage = ({
     
     // Rastrear início da geração do PIX com detalhes das ofertas
     trackEvent("generate_pix_started", { 
-      email,
+      email: emailToUse,
       totalAmount: totalAmount,
       orderBumps: orderBumps,
       selectedOffers: selectedOffers
@@ -212,10 +217,10 @@ const CheckoutPage = ({
       amount: totalAmount,
       description: description,
       customer: {
-        name: email.split('@')[0],
+        name: emailToUse.split('@')[0],
         document: "00000000000",
         phone: userData.phone,
-        email: email
+        email: emailToUse
       },
       item: {
         title: "Relatório TinderChecker",
@@ -314,24 +319,7 @@ const CheckoutPage = ({
           </div>
         </div>
         
-        {/* Barra de escassez */}
-        <div className="bg-black border border-orange-500 p-3 rounded-lg text-white text-center">
-          <div className="flex items-center justify-center mb-1">
-            <Zap className="w-4 h-4 text-orange-400 mr-1" />
-            <span className="text-sm font-medium">VAGAS LIMITADAS HOJE:</span>
-          </div>
-          
-          <Progress value={(127/150)*100} className="h-3 mb-1" />
-          
-          <div className="text-xs text-orange-400">
-            127 de 150 relatórios vendidos
-          </div>
-          
-          <div className="mt-1 text-yellow-400 text-xs flex items-center justify-center">
-            <AlertCircle className="w-3 h-3 mr-1" />
-            <span>Restam apenas {remainingSlots} acessos com desconto</span>
-          </div>
-        </div>
+        {/* A barra de escassez foi removida */}
 
         {!showPix ? (
           <Card className="bg-black border border-blue-700">
@@ -374,7 +362,6 @@ const CheckoutPage = ({
                     <Lock className="w-3 h-3 text-green-400 mr-1" />
                     <p className="text-xs text-gray-300">
                       Seus dados são criptografados e nunca compartilhados.
-                      <span className="text-blue-400 underline ml-1 cursor-pointer">Política de privacidade</span>
                     </p>
                   </div>
                   <div className="flex items-center justify-center">
@@ -508,7 +495,7 @@ const CheckoutPage = ({
 
                 <Button 
                   onClick={handleGeneratePix} 
-                  disabled={!email || isLoading} 
+                  disabled={isLoading} 
                   className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg text-sm uppercase tracking-wide transition-all duration-300"
                 >
                   {isLoading ? (
@@ -730,251 +717,6 @@ const CheckoutPage = ({
               </div>
             </div>
 
-            {/* Bonus: Manual do Detetive Digital */}
-            <div className="mt-6 bg-gradient-to-r from-yellow-800/30 to-yellow-600/30 border border-yellow-500 rounded-lg p-4 animate-bounce-once">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <Gift className="w-5 h-5 text-yellow-500 mr-2" />
-                  <h3 className="text-yellow-400 font-bold">SEU BÔNUS GRÁTIS HOJE!</h3>
-                </div>
-                <div>
-                  <Badge className="bg-red-600 text-white border-0 text-xs">VALOR R$ 0,00</Badge>
-                </div>
-              </div>
-              
-              <div className="flex">
-                <div className="flex-shrink-0 mr-3">
-                  <img 
-                    src="https://laisevip.com/wp-content/uploads/2025/06/DuKmOt5BQoKI9ZVcnHcjgw.webp" 
-                    alt="Manual do Detetive Digital" 
-                    onError={(e) => { 
-                      const imgElement = e.target as HTMLImageElement;
-                      imgElement.style.display = 'none'; 
-                      // Garantir que o próximo elemento é seguro para manipular
-                      const nextElement = imgElement.nextElementSibling as HTMLElement;
-                      if (nextElement) {
-                        nextElement.style.display = 'flex';
-                      }
-                    }} 
-                    className="w-20 h-28 object-cover rounded border border-yellow-500" 
-                  />
-                  <div 
-                    className="w-20 h-28 hidden items-center justify-center bg-black border border-yellow-500 rounded text-yellow-500 text-xs font-bold text-center">
-                    MANUAL DO DETETIVE DIGITAL
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-white font-bold mb-1">"MANUAL DO DETETIVE DIGITAL"</h4>
-                  <ul className="space-y-1">
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>47 páginas de técnicas profissionais</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Como investigar qualquer pessoa em 15 min</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Ferramentas secretas que detetives usam</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Checklist de 50 sinais de traição</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Scripts prontos para confrontação</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
-            
-            {/* Bônus: PROTOCOLO CONFISSÃO GARANTIDA */}
-            <div className="mt-6 bg-gradient-to-r from-yellow-800/30 to-yellow-600/30 border border-yellow-500 rounded-lg p-4 animate-bounce-once">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <Target className="w-5 h-5 text-yellow-500 mr-2" />
-                  <h3 className="text-yellow-400 font-bold">BÔNUS ESPECIAL</h3>
-                </div>
-                <div>
-                  <Badge className="bg-red-600 text-white border-0 text-xs">VALOR R$ 0,00</Badge>
-                </div>
-              </div>
-              
-              <div className="flex">
-                <div className="flex-shrink-0 mr-3">
-                  <img 
-                    src="https://laisevip.com/wp-content/uploads/2025/06/WhatsApp-Image-2025-06-18-at-12.38.19-PM.jpeg" 
-                    alt="Protocolo Confissão Garantida" 
-                    onError={(e) => { 
-                      const imgElement = e.target as HTMLImageElement;
-                      imgElement.style.display = 'none'; 
-                    }} 
-                    className="w-20 h-28 object-cover rounded border border-yellow-500" 
-                  />
-                  <div 
-                    className="w-20 h-28 hidden items-center justify-center bg-black border border-yellow-500 rounded text-yellow-500 text-xs font-bold text-center">
-                    PROTOCOLO CONFISSÃO
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-white font-bold mb-1">"PROTOCOLO CONFISSÃO GARANTIDA"</h4>
-                  <div className="mb-2">
-                    <Badge className="bg-green-600 text-white border-0 text-xs mb-2">💰 VALOR: R$ 97,00 - SEU GRÁTIS HOJE</Badge>
-                  </div>
-                  <ul className="space-y-1">
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>15 Scripts de confrontação inteligente</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Técnicas de linguagem corporal reveladora</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Frases que quebram qualquer resistência</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Método "Confissão em 5 Minutos"</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Como abordar sem parecer paranoico</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Estratégias para diferentes personalidades</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Guia de primeiros socorros emocionais</span>
-                    </li>
-                  </ul>
-                  <p className="text-gray-300 text-xs mt-2 italic">💡 "O mesmo método que terapeutas e detetives usam para extrair a verdade"</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Bônus: GUIA JURÍDICO COMPLETO */}
-            <div className="mt-6 bg-gradient-to-r from-yellow-800/30 to-yellow-600/30 border border-yellow-500 rounded-lg p-4 animate-bounce-once">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <Shield className="w-5 h-5 text-yellow-500 mr-2" />
-                  <h3 className="text-yellow-400 font-bold">BÔNUS SURPRESA2: GUIA JURÍDICO COMPLETO</h3>
-                </div>
-                <div>
-                  <Badge className="bg-red-600 text-white border-0 text-xs">VALOR R$ 0,00</Badge>
-                </div>
-              </div>
-              
-              <div className="flex">
-                <div className="flex-shrink-0 mr-3">
-                  <img 
-                    src="https://laisevip.com/wp-content/uploads/2025/06/a-dramatic-ebook-cover-design-featuring-_0_mtFuKFQy-CTkgidqX86g_8IjetOeFRa2Zl7rVhUBY5g.png" 
-                    alt="Guia Jurídico Completo" 
-                    onError={(e) => { 
-                      const imgElement = e.target as HTMLImageElement;
-                      imgElement.style.display = 'none'; 
-                    }} 
-                    className="w-20 h-28 object-cover rounded border border-yellow-500" 
-                  />
-                  <div 
-                    className="w-20 h-28 hidden items-center justify-center bg-black border border-yellow-500 rounded text-yellow-500 text-xs font-bold text-center">
-                    GUIA JURÍDICO
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-2">
-                    <div className="text-gray-300 text-xs">💰 VALOR DE UMA CONSULTA ADVOCATÍCIA: R$ 300-500</div>
-                    <div className="text-gray-300 text-xs">💰 VALOR DESTE GUIA COMPLETO: R$ 197,00</div>
-                    <Badge className="bg-green-600 text-white border-0 text-xs mt-1">🎁 SEU BÔNUS GRÁTIS HOJE!</Badge>
-                  </div>
-                  <ul className="space-y-1 mt-2">
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>47 páginas de orientação especializada</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Templates jurídicos prontos (R$ 97)</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Rede de contatos especializados (R$ 147)</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Vídeo-aulas complementares (R$ 67)</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Suporte jurídico básico por 30 dias</span>
-                    </li>
-                  </ul>
-                  <p className="text-gray-300 text-xs mt-2 font-bold">TOTAL: R$ 508,00 - SEU GRÁTIS!</p>
-                </div>
-              </div>
-            </div>
-            
-            {/* Bônus: INVESTIGAÇÃO EXTRA */}
-            <div className="mt-6 bg-gradient-to-r from-yellow-800/30 to-yellow-600/30 border border-yellow-500 rounded-lg p-4 animate-bounce-once">
-              <div className="flex items-center justify-between mb-2">
-                <div className="flex items-center">
-                  <Search className="w-5 h-5 text-yellow-500 mr-2" />
-                  <h3 className="text-yellow-400 font-bold">BÔNUS SURPRESA3: INVESTIGAÇÃO EXTRA</h3>
-                </div>
-                <div>
-                  <Badge className="bg-red-600 text-white border-0 text-xs">VALOR R$ 0,00</Badge>
-                </div>
-              </div>
-              
-              <div className="flex">
-                <div className="flex-shrink-0 mr-3">
-                  <img 
-                    src="https://laisevip.com/wp-content/uploads/2025/06/pmAGTtKuQIWqIViXyH2oEg.webp" 
-                    alt="Investigação Extra" 
-                    onError={(e) => { 
-                      const imgElement = e.target as HTMLImageElement;
-                      imgElement.style.display = 'none'; 
-                    }} 
-                    className="w-20 h-28 object-cover rounded border border-yellow-500" 
-                  />
-                  <div 
-                    className="w-20 h-28 hidden items-center justify-center bg-black border border-yellow-500 rounded text-yellow-500 text-xs font-bold text-center">
-                    INVESTIGAÇÃO EXTRA
-                  </div>
-                </div>
-                <div>
-                  <div className="mb-2">
-                    <div className="text-gray-300 text-xs">💰 VALOR: R$ 47,00</div>
-                    <Badge className="bg-green-600 text-white border-0 text-xs mt-1">🎁 APENAS NAS PRÓXIMAS 2 HORAS</Badge>
-                  </div>
-                  <h4 className="text-white font-bold mt-2 mb-1">🔍 "SEGUNDO RELATÓRIO GRÁTIS"</h4>
-                  <ul className="space-y-1">
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Investigue outra pessoa de graça</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Válido por 30 dias</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Mesmo nível de detalhamento</span>
-                    </li>
-                    <li className="text-gray-300 text-xs flex items-start">
-                      <Check className="w-3 h-3 text-yellow-500 mr-1 mt-0.5 flex-shrink-0" />
-                      <span>Perfeito para confirmar suspeitas</span>
-                    </li>
-                  </ul>
-                </div>
-              </div>
-            </div>
             
             <div className="flex justify-center mt-6 mb-4">
               <button 
@@ -995,52 +737,7 @@ const CheckoutPage = ({
           </CardContent>
         </Card>
         
-        {/* Depoimentos Expandidos */}
-        <Card className="bg-black border border-blue-700 mt-4">
-          <CardContent className="p-4">
-            <h4 className="text-blue-400 font-semibold mb-2 text-center">
-              ⭐⭐⭐⭐⭐ 4.9/5 (12.847 avaliações)
-            </h4>
-            
-            <div className="space-y-3 mt-3">
-              <div className="border-l-2 border-blue-500 pl-3">
-                <p className="text-gray-300 text-sm italic">
-                  "Descobri 3 perfis secretos que ele mantinha. Valeu cada centavo!"
-                </p>
-                <div className="flex justify-between mt-1">
-                  <p className="text-blue-400 text-xs font-medium">Marina S.</p>
-                  <div className="text-yellow-500">⭐⭐⭐⭐⭐</div>
-                </div>
-              </div>
-              
-              <div className="border-l-2 border-blue-500 pl-3">
-                <p className="text-gray-300 text-sm italic">
-                  "Em 5 minutos soube mais que em 2 anos de relacionamento."
-                </p>
-                <div className="flex justify-between mt-1">
-                  <p className="text-blue-400 text-xs font-medium">Carlos R.</p>
-                  <div className="text-yellow-500">⭐⭐⭐⭐⭐</div>
-                </div>
-              </div>
-              
-              <div className="border-l-2 border-blue-500 pl-3">
-                <p className="text-gray-300 text-sm italic">
-                  "Minha intuição estava certa. Obrigada por me dar coragem!"
-                </p>
-                <div className="flex justify-between mt-1">
-                  <p className="text-blue-400 text-xs font-medium">Ana L.</p>
-                  <div className="text-yellow-500">⭐⭐⭐⭐⭐</div>
-                </div>
-              </div>
-            </div>
-            
-            <div className="text-center mt-3">
-              <Button variant="link" className="text-blue-500 text-xs">
-                VER MAIS 2.341 DEPOIMENTOS
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
+
       </div>
     </div>
   );

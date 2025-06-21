@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, Shield, Eye, Clock, MapPin, Lock, CheckCircle, Info, AlertCircle, CreditCard } from 'lucide-react';
+import { AlertTriangle, Shield, Eye, Clock, MapPin, Lock, CheckCircle, Info, AlertCircle, CreditCard, X, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -9,6 +9,8 @@ interface ProfileResultsProps {
   userData: {
     phone: string;
     gender: string;
+    name?: string;
+    age?: string;
     profilePhoto?: string;
   };
   onPurchase: () => void;
@@ -28,6 +30,8 @@ const trackEvent = (eventName: string, eventData?: Record<string, any>) => {
 
 const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
   const [timeLeft, setTimeLeft] = useState(300);
+  const [showSocialCard, setShowSocialCard] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
   const checkoutSectionRef = React.useRef<HTMLDivElement>(null);
 
   // Adicionar log para debug da recepção da userData
@@ -117,11 +121,107 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
   
   const blurredPhotos = getPhotosToDisplay();
 
+  // Adicionar keyframes para animações do modal
+  useEffect(() => {
+    const styleTag = document.createElement('style');
+    styleTag.innerHTML = `
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      @keyframes scaleIn {
+        from { transform: scale(0.9); opacity: 0; }
+        to { transform: scale(1); opacity: 1; }
+      }
+    `;
+    document.head.appendChild(styleTag);
+    
+    return () => {
+      document.head.removeChild(styleTag);
+    };
+  }, []);
+
   return (
     <div className="min-h-screen p-4 bg-gradient-tinder-dark">
+      {showPrivacyModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4" style={{animation: 'fadeIn 0.3s ease-out forwards'}}>
+          <div className="bg-gray-900 border border-blue-600 rounded-lg max-w-md w-full p-5" style={{animation: 'scaleIn 0.3s ease-out forwards'}}>
+            <div className="flex justify-between items-center mb-4">
+              <div className="flex items-center">
+                <ShieldCheck className="w-5 h-5 text-green-500 mr-2" />
+                <h3 className="text-lg font-bold text-white">Proteção de Dados</h3>
+              </div>
+              <button 
+                onClick={() => setShowPrivacyModal(false)} 
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="space-y-4 text-gray-200">
+              <div className="flex items-center p-3 bg-green-900/20 border border-green-800 rounded-lg">
+                <Lock className="text-green-400 mr-2 flex-shrink-0" />
+                <p className="text-sm">Seus dados pessoais estão totalmente protegidos e criptografados.</p>
+              </div>
+              
+              <p>Garantimos que todas as informações compartilhadas conosco são:</p>
+              
+              <ul className="list-disc pl-5 space-y-1 text-sm">
+                <li>Armazenadas com criptografia de ponta a ponta</li>
+                <li>Nunca compartilhadas com terceiros</li>
+                <li>Utilizadas apenas para os fins específicos da investigação</li>
+                <li>Automaticamente excluídas após 90 dias</li>
+              </ul>
+              
+              <p className="text-xs text-gray-400">Valorizamos sua privacidade e segurança acima de tudo. Trabalhamos de acordo com a LGPD e padrões internacionais de proteção de dados.</p>
+            </div>
+            
+            <div className="mt-5 flex justify-end">
+              <button 
+                onClick={() => setShowPrivacyModal(false)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm transition-colors"
+              >
+                Entendi
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="w-full max-w-md mx-auto space-y-4">
         {/* Box de investigação concluída - Com paleta otimizada */}
         <div className="border-2 border-blue-700 rounded-lg overflow-hidden bg-black">
+          {/* Foto do perfil - usando imagem estática garantida */}
+          <div className="flex flex-col justify-center items-center pt-4">
+            {/* Nome da pessoa */}
+            {userData.name && (
+              <div className="mb-2 text-center">
+                <span className="text-green-400 font-bold text-lg">{userData.name}</span>
+                {userData.age && (
+                  <span className="text-gray-300 ml-2">({userData.age})</span>
+                )}
+              </div>
+            )}
+            
+            <div className="relative mb-3">
+              <img 
+                src={"https://pps.whatsapp.net/v/t61.24694-24/462251932_3920498131602188_2402132986845028492_n.jpg?ccb=11-4&oh=01_Q5Aa1wFcakDnRt4J15x0ezwEkqU4sBdbxNwej7zPLUpjZJ4KAw&oe=68630F4B&_nc_sid=5e03e0&_nc_cat=100"}
+                alt="Perfil encontrado" 
+                className="w-28 h-28 rounded-full border-2 border-green-500 object-cover shadow-lg shadow-green-500/30" 
+                crossOrigin="anonymous"
+                onError={(e) => {
+                  console.error('Erro ao carregar a imagem do perfil');
+                  const imgElement = e.target as HTMLImageElement;
+                  imgElement.src = userData.gender === 'Mulher'
+                    ? 'https://i.imgur.com/JFHjdNr.jpg'
+                    : 'https://i.imgur.com/8MuTbk0.jpg';
+                }}
+              />
+              <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
+                <CheckCircle className="h-4 w-4 text-black" />
+              </div>
+            </div>
+          </div>
           <div className="bg-blue-900 px-4 py-3 text-center font-bold tracking-wide uppercase text-white">
             <span className="text-sm">INVESTIGAÇÃO CONCLUÍDA</span>
           </div>
@@ -152,7 +252,7 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
             
             <button
               onClick={onPurchase}
-              className="w-full bg-red-600 text-white font-bold py-4 px-6 rounded-lg hover:bg-red-700 transition-all duration-300 transform hover:scale-105 shadow-lg uppercase tracking-wider text-xl flex items-center justify-center my-4"
+              className="w-full bg-green-600 text-white font-bold py-4 px-6 rounded-lg hover:bg-green-700 transition-all duration-300 transform hover:scale-105 shadow-lg uppercase tracking-wider text-xl flex items-center justify-center my-4 animate-pulse"
             >
               VER RELATÓRIO COMPLETO AGORA
             </button>
@@ -250,7 +350,7 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
                 trackEvent("unlock_report_clicked", { timeRemaining: timeLeft });
                 onPurchase();
               }}
-              className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-5 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg text-xl uppercase tracking-wide"
+              className="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-5 px-6 rounded-lg transition-all duration-300 transform hover:scale-105 shadow-lg text-xl uppercase tracking-wide animate-pulse"
             >
               DESBLOQUEAR RELATÓRIO AGORA
             </Button>
@@ -268,7 +368,14 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
               <div className="grid grid-cols-2 gap-2 text-xs">
                 <div className="flex items-center space-x-1 bg-blue-900/30 p-2 rounded">
                   <Info className="w-3 h-3 text-blue-400" />
-                  <a href="#" className="text-blue-400 underline">Política de Privacidade</a>
+                  <a 
+                    href="#" 
+                    className="text-blue-400 underline" 
+                    onClick={(e) => {
+                      e.preventDefault();
+                      setShowPrivacyModal(true);
+                    }}
+                  >Política de Privacidade</a>
                 </div>
                 <div className="flex items-center space-x-1 bg-blue-900/30 p-2 rounded">
                   <CreditCard className="w-3 h-3 text-blue-400" />
@@ -632,5 +739,7 @@ const ActivityItem = ({ icon, text, time }: { icon: React.ReactNode; text: strin
     <span className="text-gray-400 text-xs">{time}</span>
   </div>
 );
+
+
 
 export default ProfileResults;
