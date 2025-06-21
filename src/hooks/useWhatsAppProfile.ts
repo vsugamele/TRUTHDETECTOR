@@ -81,11 +81,24 @@ export const useWhatsAppProfile = () => {
           photoUrl = jsonData.url;
           console.log('Foto detectada em url:', photoUrl);
         }
+        // Formato alternativo (url dentro do objeto data)
+        else if (jsonData && jsonData.data && jsonData.data.url) {
+          photoUrl = jsonData.data.url;
+          console.log('Foto detectada em data.url:', photoUrl);
+        }
+        // Verificação para data.photoUrl
+        else if (jsonData && jsonData.data && jsonData.data.photoUrl) {
+          photoUrl = jsonData.data.photoUrl;
+          console.log('Foto detectada em data.photoUrl:', photoUrl);
+        }
       } catch (jsonError) {
         console.log('Resposta não é JSON, verificando se é URL direta');
         
         // Se não for JSON, verifica se é uma URL direta
-        if (rawResponseText.trim().startsWith('http') && rawResponseText.includes('pps.whatsapp.net')) {
+        if (rawResponseText.trim().startsWith('http') && 
+            (rawResponseText.includes('pps.whatsapp.net') || 
+             rawResponseText.includes('whatsapp') || 
+             rawResponseText.includes('wimg'))) {
           photoUrl = rawResponseText.trim();
           console.log('Foto detectada como URL direta:', photoUrl);
         }
@@ -93,6 +106,17 @@ export const useWhatsAppProfile = () => {
 
       // Log adicional para debug
       console.log('useWhatsAppProfile - URL da foto encontrada:', photoUrl || 'Nenhuma foto encontrada');
+      
+      // Verificações adicionais para garantir que a URL é válida
+      if (photoUrl) {
+        // Verificar se é uma URL válida
+        try {
+          new URL(photoUrl);
+        } catch (e) {
+          console.error('URL da foto inválida:', photoUrl);
+          photoUrl = '';
+        }
+      }
       
       return {
         photoUrl, // Agora sempre será string (vazia se não tiver foto)

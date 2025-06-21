@@ -95,9 +95,9 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
     if (userData.gender === 'Mulher') {
       // Mostrar fotos de homens se a pessoa escolheu "Mulher"
       defaultPhotos = [
-        'https://laisevip.com/wp-content/uploads/2025/06/male4.jpeg',
         'https://laisevip.com/wp-content/uploads/2025/06/male2.jpeg',
-        'https://laisevip.com/wp-content/uploads/2025/06/male3.jpeg'
+        'https://laisevip.com/wp-content/uploads/2025/06/male3.jpeg',
+        'https://laisevip.com/wp-content/uploads/2025/06/male4.jpeg'
       ];
       console.log('Mostrando fotos de homens para usuária mulher');
     } else {
@@ -110,12 +110,15 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
       console.log('Mostrando fotos de mulheres para usuário(a): ' + userData.gender);
     }
     
-    // Se temos a foto do usuário, substitui a primeira foto por ela
+    // Se temos a foto do perfil do WhatsApp (vinda da API de pesquisa)
     if (userData.profilePhoto && userData.profilePhoto.length > 0 && userData.profilePhoto.startsWith('http')) {
+      // Usar a foto real obtida da API do WhatsApp
+      console.log('Usando foto real de perfil do WhatsApp');
       return [userData.profilePhoto, ...defaultPhotos.slice(0, 2)];
     }
     
-    // Caso contrário, retorna as fotos padrão
+    // Caso seja um perfil sem foto ou número inexistente, não usar nenhuma foto
+    console.log('Perfil sem foto ou número inexistente');
     return defaultPhotos;
   };
   
@@ -204,19 +207,25 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
             )}
             
             <div className="relative mb-3">
-              <img 
-                src={"https://pps.whatsapp.net/v/t61.24694-24/462251932_3920498131602188_2402132986845028492_n.jpg?ccb=11-4&oh=01_Q5Aa1wFcakDnRt4J15x0ezwEkqU4sBdbxNwej7zPLUpjZJ4KAw&oe=68630F4B&_nc_sid=5e03e0&_nc_cat=100"}
-                alt="Perfil encontrado" 
-                className="w-28 h-28 rounded-full border-2 border-green-500 object-cover shadow-lg shadow-green-500/30" 
-                crossOrigin="anonymous"
-                onError={(e) => {
-                  console.error('Erro ao carregar a imagem do perfil');
-                  const imgElement = e.target as HTMLImageElement;
-                  imgElement.src = userData.gender === 'Mulher'
-                    ? 'https://i.imgur.com/JFHjdNr.jpg'
-                    : 'https://i.imgur.com/8MuTbk0.jpg';
-                }}
-              />
+              {userData.profilePhoto && userData.profilePhoto.length > 0 ? (
+                <img 
+                  src={userData.profilePhoto}
+                  alt="Perfil encontrado" 
+                  className="w-28 h-28 rounded-full border-2 border-green-500 object-cover shadow-lg shadow-green-500/30" 
+                  crossOrigin="anonymous"
+                  onError={(e) => {
+                    console.error('Erro ao carregar a imagem do perfil');
+                    const imgElement = e.target as HTMLImageElement;
+                    imgElement.src = userData.gender === 'Mulher'
+                      ? 'https://i.imgur.com/JFHjdNr.jpg'
+                      : 'https://i.imgur.com/8MuTbk0.jpg';
+                  }}
+                />
+              ) : (
+                <div className="w-28 h-28 rounded-full border-2 border-red-500 bg-gray-800 flex items-center justify-center shadow-lg">
+                  <span className="text-xs text-gray-400">Sem foto</span>
+                </div>
+              )}
               <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
                 <CheckCircle className="h-4 w-4 text-black" />
               </div>
@@ -227,23 +236,6 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
           </div>
           
           <div className="p-6 text-center">
-            {/* Mostrar foto do usuário apenas quando disponível com URL válida */}
-            {userData.profilePhoto && userData.profilePhoto.length > 0 && userData.profilePhoto.startsWith('http') && (
-              <div className="flex justify-center mb-4">
-                <div className="relative">
-                  <div className="w-28 h-28 rounded-full overflow-hidden border-3 border-green-500 shadow-lg shadow-green-500/30">
-                    <img 
-                      src={userData.profilePhoto} 
-                      alt="Perfil" 
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="absolute bottom-0 right-0 bg-green-500 rounded-full p-1">
-                    <CheckCircle className="h-4 w-4 text-white" />
-                  </div>
-                </div>
-              </div>
-            )}
             
             <div className="mb-4 text-base font-bold text-white">
               <CheckCircle className="h-5 w-5 text-green-500 inline mr-2" /> 

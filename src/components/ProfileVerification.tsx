@@ -179,9 +179,13 @@ const ProfileVerification = ({
         trackEvent("profile_photo_not_found");
       }
       
-      // Agora que todos os dados foram coletados, pode finalizar
-      console.log("ProfileVerification - Estado final antes de finalizar:", { profilePhoto });
-      finalizeVerification();
+      console.log("ProfileVerification - URL da foto antes de finalizar:", profile?.photoUrl || "Sem foto");
+      
+      // Pequeno timeout para garantir que o estado foi atualizado antes de finalizar
+      setTimeout(() => {
+        console.log("ProfileVerification - Estado final antes de finalizar:", { profilePhoto });
+        finalizeVerification();
+      }, 100);
       
     } catch (err) {
       console.error("Erro ao buscar perfil:", err);
