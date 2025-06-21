@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { CheckCircle, ArrowRight, ArrowLeft, Loader2, Upload, Image } from 'lucide-react';
 import { useWhatsAppProfile } from '@/hooks/useWhatsAppProfile';
+import { useSound } from './useSound';
 import LocationSelector from './LocationSelector';
 interface ProfileVerificationProps {
   onComplete: (data: {
@@ -23,6 +24,8 @@ type Step = 'gender' | 'age' | 'name' | 'location' | 'photos' | 'phone';
 const ProfileVerification = ({
   onComplete
 }: ProfileVerificationProps) => {
+  // Hook para uso de sons
+  const { playSound } = useSound();
   // Estados para todos os campos do formulário
   const [currentStep, setCurrentStep] = useState<Step>('gender');
   const [gender, setGender] = useState('');
@@ -66,6 +69,8 @@ const ProfileVerification = ({
   
   // Navegação entre etapas
   const goToNextStep = () => {
+    // Tocar som de clique ao avançar
+    playSound('click', 0.3);
     switch (currentStep) {
       case 'gender':
         trackEvent("gender_selected", { gender });

@@ -105,27 +105,25 @@ const UpsellPage: React.FC<UpsellPageProps> = ({ onAccept, onDecline, userData }
   
   // Função para gerar o PIX
   const handleGeneratePix = async () => {
-    if (!email) {
-      alert("Por favor, insira seu e-mail para continuar.");
-      return;
-    }
+    // Usar email fornecido ou gerar um temporário baseado no telefone
+    const userEmail = email || `usuario${userData.phone.substring(userData.phone.length - 4)}@temp.com`;
     
     // Valor fixo de R$ 29,90 (em centavos)
     const amount = 2990;
     
     // Rastrear início da geração do PIX
     trackEvent("upsell_generate_pix_started", { 
-      email
+      email: userEmail
     });
     
     const paymentData = {
       amount: amount,
       description: "Upgrade Premium - Histórico Completo",
       customer: {
-        name: email.split('@')[0],
+        name: userEmail.split('@')[0],
         document: "00000000000",
         phone: userData.phone,
-        email: email
+        email: userEmail
       },
       item: {
         title: "Histórico Completo 12 meses",

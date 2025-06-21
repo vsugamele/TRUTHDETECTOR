@@ -2,6 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Alert, AlertTitle, AlertDescription } from '@/components/ui/alert';
+import { useSound } from './useSound';
 
 interface AnalyzingProfileProps {
   onComplete: () => void;
@@ -22,35 +23,34 @@ const trackEvent = (eventName: string, eventData?: Record<string, any>) => {
 const AnalyzingProfile = ({ onComplete }: AnalyzingProfileProps) => {
   const [showTinderAlert, setShowTinderAlert] = useState(false);
   const [analysisComplete, setAnalysisComplete] = useState(false);
+  const { playSound } = useSound();
   
   useEffect(() => {
     // Registrar início da análise do perfil
     trackEvent("profile_analyzing_started");
     
     const checkpoints = [
-      { time: 500, event: "analysis_step_activity_check" },
-      { time: 1500, event: "analysis_step_photos_check" },
-      { time: 2500, event: "analysis_step_location_check" },
-      { time: 3000, event: "analysis_step_tinder_discovery" },
-      { time: 4500, event: "analysis_step_report_compiling" }
+      { time: 500, event: "analysis_step_activity_check", sound: "progress" },
+      { time: 1500, event: "analysis_step_photos_check", sound: "progress" },
+      { time: 2500, event: "analysis_step_location_check", sound: "progress" },
+      { time: 3000, event: "analysis_step_tinder_discovery", sound: "alert" },
+      { time: 4500, event: "analysis_step_report_compiling", sound: "progress" }
     ];
     
+    // Tocar som inicial de início da análise
+    playSound('progress', 0.3);
+    
     // Registrar cada etapa da análise
-    const stepTimers = checkpoints.map(({ time, event }) => 
+    const stepTimers = checkpoints.map(({ time, event, sound }) => 
       setTimeout(() => {
         trackEvent(event, { timestamp: new Date().toISOString() });
+        
+        // Tocar o som específico da etapa
+        playSound(sound as 'progress' | 'alert' | 'notification' | 'success' | 'click', 0.4);
         
         // Quando descobrir o Tinder, mostrar o alerta
         if (event === "analysis_step_tinder_discovery") {
           setShowTinderAlert(true);
-          
-          // Tocar um som de notificação (opcional)
-          try {
-            const notificationSound = new Audio("/notification.mp3");
-            notificationSound.play();
-          } catch (e) {
-            console.log("Não foi possível tocar o som de notificação");
-          }
         }
       }, time)
     );

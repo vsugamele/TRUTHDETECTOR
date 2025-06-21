@@ -64,7 +64,7 @@ const ActivityMonitor = ({ onViewRegistryClick }: ActivityMonitorProps) => {
                 </div>
                 <div className="text-gray-300 text-sm mt-1 flex items-center">
                   <MapPin className="h-3 w-3 mr-1 text-gray-400" />
-                  <span>Shopping Center - 5min atrás</span>
+                  <span>Shopping Center - 3 dias atrás</span>
                 </div>
               </div>
             </div>
@@ -102,7 +102,7 @@ const ActivityMonitor = ({ onViewRegistryClick }: ActivityMonitorProps) => {
                 </div>
                 <div className="text-gray-300 text-sm flex items-center">
                   <Clock className="h-3 w-3 mr-1 text-gray-400" />
-                  <span>1min atrás</span>
+                  <span>2 dias atrás</span>
                 </div>
               </div>
             </div>
@@ -152,7 +152,7 @@ const ActivityMonitor = ({ onViewRegistryClick }: ActivityMonitorProps) => {
               </div>
               <div>
                 <span className="text-gray-400">Tempo:</span>
-                <span className="text-white ml-2">há 5 minutos</span>
+                <span className="text-white ml-2">há 2 dias</span>
               </div>
             </div>
             

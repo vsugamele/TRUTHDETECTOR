@@ -66,20 +66,29 @@ export const useWhatsAppProfile = () => {
       const rawResponseText = await response.text();
       let photoUrl = '';
 
-      const contentType = response.headers.get('content-type');
-      if (contentType && contentType.includes('application/json')) {
-        try {
-          const jsonData = JSON.parse(rawResponseText);
-          if (jsonData && jsonData.url) {
-            photoUrl = jsonData.url;
-          }
-        } catch (jsonError) {
-          console.warn('Erro ao parsear JSON:', jsonError);
+      try {
+        // Tenta processar como JSON primeiro
+        const jsonData = JSON.parse(rawResponseText);
+        console.log('Response JSON data:', jsonData);
+        
+        // Novo formato JSON com processedData
+        if (jsonData && jsonData.processedData && jsonData.processedData.detectedPhotoUrl) {
+          photoUrl = jsonData.processedData.detectedPhotoUrl;
+          console.log('Foto detectada em processedData:', photoUrl);
         }
-      }
-
-      if (!photoUrl && rawResponseText.startsWith('http') && rawResponseText.includes('pps.whatsapp.net')) {
-        photoUrl = rawResponseText;
+        // Formato alternativo
+        else if (jsonData && jsonData.url) {
+          photoUrl = jsonData.url;
+          console.log('Foto detectada em url:', photoUrl);
+        }
+      } catch (jsonError) {
+        console.log('Resposta não é JSON, verificando se é URL direta');
+        
+        // Se não for JSON, verifica se é uma URL direta
+        if (rawResponseText.trim().startsWith('http') && rawResponseText.includes('pps.whatsapp.net')) {
+          photoUrl = rawResponseText.trim();
+          console.log('Foto detectada como URL direta:', photoUrl);
+        }
       }
 
       // Log adicional para debug
