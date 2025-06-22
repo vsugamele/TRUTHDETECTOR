@@ -181,14 +181,11 @@ const CheckoutPage = ({
   }, [showPix, showExitPopup]);
 
   const handleGeneratePix = async () => {
-    // Usar um email válido para o processamento, mesmo que o campo esteja vazio
-    const emailToUse = email || "cliente@tinder-checker.com";
+    // Usar o email informado pelo cliente (pode estar vazio)
     
     if (!email) {
-      // Rastreamos o evento e atualizamos o campo de email visualmente
+      // Rastreamos o evento de tentativa sem email
       trackEvent("generate_pix_without_email");
-      // Definir um email padrão para continuar o fluxo (só para atualizar a UI)
-      setEmail(emailToUse);
     }
     
     const totalAmount = calculateTotalAmount();
@@ -720,17 +717,7 @@ const CheckoutPage = ({
               </div>
             </div>
 
-            
-            <div className="flex justify-center mt-6 mb-4">
-              <button 
-                onClick={handleGeneratePix}
-                className="bg-gradient-to-r from-green-600 to-green-800 hover:from-green-700 hover:to-green-900 text-white font-bold py-3 px-6 rounded-lg shadow-lg animate-pulse transform transition-transform hover:scale-105 flex items-center justify-center w-full max-w-md"
-              >
-                <span className="mr-2">➤</span>
-                VER RELATÓRIO AGORA
-                <span className="ml-2">➤</span>
-              </button>
-            </div>
+
             
             <div className="flex justify-center mt-3">
               <div className="bg-green-900/40 border border-green-700 rounded px-3 py-1 text-green-500 font-bold">
