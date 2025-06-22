@@ -142,7 +142,7 @@ const TinderChecker = () => {
     
     // Usa setTimeout para garantir que o componente foi renderizado antes de fazer o scroll
     setTimeout(() => {
-      // Primeiro rola para o topo da página de checkout
+      // Rola para o topo da página de checkout e permanece lá
       window.scrollTo({
         top: 0,
         behavior: 'instant' // Rolagem instantânea para melhor experiência
@@ -150,16 +150,13 @@ const TinderChecker = () => {
       
       console.log("Realizando scroll para o topo da página de checkout");
       
-      // Em seguida, após um breve intervalo, rola para o email-section se existir
-      setTimeout(() => {
-        const emailSection = document.getElementById('email-section');
-        if (emailSection) {
-          emailSection.scrollIntoView({ behavior: 'smooth' });
-          // Destaque temporário para o campo de email
-          emailSection.classList.add('highlight-pulse');
-          setTimeout(() => emailSection.classList.remove('highlight-pulse'), 3000);
-        }
-      }, 500); // Tempo para garantir que a rolagem ao topo foi concluída
+      // Optional: Destaque visual para o alerta no topo (se existir)
+      const alertSection = document.querySelector('.border-2.border-red-500.bg-black');
+      if (alertSection) {
+        // Adiciona uma classe para destacar brevemente
+        alertSection.classList.add('highlight-pulse');
+        setTimeout(() => alertSection.classList.remove('highlight-pulse'), 2000);
+      }
     }, 50); // Tempo mínimo para garantir que o componente foi renderizado
   };
 
