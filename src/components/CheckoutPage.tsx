@@ -48,7 +48,11 @@ const CheckoutPage = ({
   const [utmParams, setUtmParams] = useState('');
   // contador regressivo e vagas restantes
   const [countdown, setCountdown] = useState({ hours: 23, minutes: 45, seconds: 12 });
-  const [remainingSlots, setRemainingSlots] = useState(23);
+  const [remainingSlots, setRemainingSlots] = useState(18);
+  const [emailError, setEmailError] = useState(false);
+  const emailInputRef = useRef<HTMLInputElement>(null);
+  // Referência para a seção de email para scroll
+  const emailSectionRef = useRef<HTMLDivElement>(null);
   const [showExitPopup, setShowExitPopup] = useState(false);
   
   // Estado para os order bumps (ofertas adicionais)
@@ -57,9 +61,6 @@ const CheckoutPage = ({
     rastreioGPS: false,      // Rastreie a localização da pessoa desejada 24 horas por dia via GPS — R$ 9,00
     historicoWeb: false       // Links compartilhados e excluídos, histórico de navegação, logins e muito mais — R$ 9,00
   });
-  
-  // Referência para a seção de email para scroll
-  const emailSectionRef = useRef<HTMLDivElement>(null);
   
   // Função para calcular o valor total com as ofertas adicionais selecionadas
   const calculateTotalAmount = () => {
@@ -181,12 +182,34 @@ const CheckoutPage = ({
   }, [showPix, showExitPopup]);
 
   const handleGeneratePix = async () => {
-    // Usar o email informado pelo cliente (pode estar vazio)
-    
+    // Verificar se o email foi preenchido
     if (!email) {
       // Rastreamos o evento de tentativa sem email
       trackEvent("generate_pix_without_email");
+      
+      // Mostrar erro e focar no campo de email
+      setEmailError(true);
+      
+      // Rolar suavemente até a seção de email
+      const emailSection = document.getElementById('email-section');
+      if (emailSection) {
+        emailSection.scrollIntoView({ behavior: 'smooth' });
+        // Destaque temporário para o campo
+        emailSection.classList.add('highlight-pulse');
+        setTimeout(() => emailSection.classList.remove('highlight-pulse'), 2000);
+      }
+      
+      // Focar no campo de email
+      if (emailInputRef.current) {
+        setTimeout(() => emailInputRef.current?.focus(), 500);
+      }
+      
+      // Não continua com a geração do PIX
+      return;
     }
+    
+    // Limpa o erro se o email estiver preenchido
+    setEmailError(false);
     
     const totalAmount = calculateTotalAmount();
     const selectedOffers = [];
@@ -204,7 +227,7 @@ const CheckoutPage = ({
     
     // Rastrear início da geração do PIX com detalhes das ofertas
     trackEvent("generate_pix_started", { 
-      email: emailToUse,
+      email: email,
       totalAmount: totalAmount,
       orderBumps: orderBumps,
       selectedOffers: selectedOffers
@@ -214,10 +237,10 @@ const CheckoutPage = ({
       amount: totalAmount,
       description: description,
       customer: {
-        name: emailToUse.split('@')[0],
+        name: email.split('@')[0],
         document: "00000000000",
         phone: userData.phone,
-        email: emailToUse
+        email: email
       },
       item: {
         title: "Relatório TinderChecker",
@@ -284,35 +307,13 @@ const CheckoutPage = ({
         
         {/* Header de Urgência Devastador */}
         <div className="border-2 border-red-500 bg-black text-white p-4 text-center font-bold rounded-lg">
-          <div className="text-red-500 text-lg mb-2 flex items-center justify-center">
-            <AlertCircle className="w-5 h-5 mr-2" />
-            <span>ÚLTIMAS HORAS DE ACESSO LIBERADO</span>
+          <div className="text-red-500 text-lg mb-3 flex items-center justify-center">
+            <AlertTriangle className="w-5 h-5 mr-2 animate-pulse" />
+            <span>RELATÓRIO EXPIRA A: {String(countdown.hours).padStart(2, '0')}:{String(countdown.minutes).padStart(2, '0')}:{String(countdown.seconds).padStart(2, '0')}</span>
           </div>
           
-          <div className="text-gray-300 text-sm mb-2">Este relatório expira em:</div>
-          
-          {/* Contador regressivo */}
-          <div className="flex items-center justify-center mb-2 text-white">
-            <div className="bg-red-900 px-2 py-1 rounded mr-1 w-12 text-center">
-              {String(countdown.hours).padStart(2, '0')}
-            </div>
-            <span className="mx-1">:</span>
-            <div className="bg-red-900 px-2 py-1 rounded mr-1 w-12 text-center">
-              {String(countdown.minutes).padStart(2, '0')}
-            </div>
-            <span className="mx-1">:</span>
-            <div className="bg-red-900 px-2 py-1 rounded w-12 text-center">
-              {String(countdown.seconds).padStart(2, '0')}
-            </div>
-          </div>
-          
-          <div className="flex items-center justify-center text-yellow-400 text-sm">
-            <Clock className="w-4 h-4 animate-pulse mr-1" />
-            <span>CONTANDO AGORA</span>
-          </div>
-          
-          <div className="mt-2 text-gray-300">
-            Após isso: <span className="text-white font-medium">R$ 97,00</span> (preço normal)
+          <div className="text-yellow-200 text-sm">
+            Após isso, os dados são DELETADOS AUTOMATICAMENTE por segurança!
           </div>
         </div>
         
@@ -486,12 +487,23 @@ const CheckoutPage = ({
                       <label className="block text-sm font-medium">ONDE ENVIAR SEU RELATÓRIO CONFIDENCIAL:</label>
                     </div>
                     <Input 
+                      ref={emailInputRef}
                       type="email" 
-                      placeholder="seu@email.com" 
+                      placeholder="seu@email.com"
+                      className={emailError ? "border-red-500 focus:ring-red-500 animate-shake" : ""} 
                       value={email} 
-                      onChange={e => setEmail(e.target.value)} 
-                      className="w-full bg-blue-900/20 border-blue-800 text-white mb-3" 
+                      onChange={(e) => {
+                        setEmail(e.target.value);
+                        if (e.target.value) setEmailError(false);
+                      }}
                     />
+                  
+                    {emailError && (
+                      <div className="text-red-500 text-sm mt-1 flex items-center">
+                        <AlertTriangle className="w-4 h-4 mr-1" />
+                        Por favor, informe seu email para continuar
+                      </div>
+                    )}
                   
                     <div className="flex flex-col space-y-2 mt-2">
                       <div className="flex items-center">
@@ -735,7 +747,7 @@ const CheckoutPage = ({
 
 export default CheckoutPage;
 
-// CSS para animação bounce-once
+// CSS para animações
 const styleElement = document.createElement('style');
 styleElement.innerHTML = `
   @keyframes bounce-once {
@@ -745,6 +757,15 @@ styleElement.innerHTML = `
   }
   .animate-bounce-once {
     animation: bounce-once 0.5s ease-out forwards;
+  }
+  
+  @keyframes shake {
+    0%, 100% { transform: translateX(0); }
+    20%, 60% { transform: translateX(-8px); }
+    40%, 80% { transform: translateX(8px); }
+  }
+  .animate-shake {
+    animation: shake 0.5s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
   }
 `;
 document.head.appendChild(styleElement);
