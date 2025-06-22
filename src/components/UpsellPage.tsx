@@ -7,7 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { 
   Shield, CheckCircle, AlertTriangle, Timer, Clock, 
-  Check, Star, Gift, Copy, Loader2, QrCode
+  Check, Star, Gift, Copy, Loader2, QrCode, Mail, Lock
 } from 'lucide-react';
 import { usePixApi } from '@/hooks/usePixApi';
 
@@ -482,19 +482,31 @@ const UpsellPage: React.FC<UpsellPageProps> = ({ onAccept, onDecline, userData }
         </div>
         
         {/* Parabéns + Revelação */}
-        <Card className="bg-gray-800 border-gray-700 mb-6">
-          <CardContent className="p-6">
-            <h2 className="text-xl font-bold text-green-500 mb-2">Parabéns pela sua decisão!</h2>
-            <p className="mb-4">
-              Você tomou a atitude certa ao buscar a verdade. Sabemos como é difícil viver na incerteza, 
-              e agora você terá as respostas que precisa sobre as últimas 48 horas.
-            </p>
-            <p className="text-yellow-400 font-bold mb-2">Mas descobrimos algo importante...</p>
-            <p className="text-gray-300">
-              Nossa análise revelou que 87% das conversas comprometedoras acontecem FORA desse período de 48 horas. 
-              Pessoas experientes em relacionamentos paralelos sabem exatamente como esconder rastros recentes, 
-              mas deixam pistas no histórico mais antigo.
-            </p>
+        <Card className="bg-gradient-to-b from-gray-800 to-gray-900 border-2 border-green-500 mb-6 shadow-lg overflow-hidden">
+          <div className="bg-green-600 py-3 px-4 text-center">
+            <h2 className="text-2xl font-bold text-white flex items-center justify-center">
+              <CheckCircle className="mr-2 h-6 w-6" /> Parabéns pela sua decisão!
+            </h2>
+          </div>
+          <CardContent className="p-6 relative">
+            <div className="absolute top-0 right-0 w-32 h-32 bg-green-500/10 rounded-full -mt-16 -mr-16 z-0"></div>
+            <div className="relative z-10">
+              <p className="mb-5 text-white text-lg leading-relaxed border-l-4 border-green-500 pl-4 py-2">
+                Você tomou a atitude certa ao buscar a verdade. Sabemos como é difícil viver na incerteza, 
+                e agora você terá as respostas que precisa sobre as últimas 48 horas.
+              </p>
+              
+              <div className="bg-yellow-500/20 p-4 rounded-lg border-l-4 border-yellow-500 mb-4">
+                <p className="text-yellow-400 font-bold text-lg mb-2 flex items-center">
+                  <AlertTriangle className="mr-2 h-5 w-5" /> Descobrimos algo importante...
+                </p>
+                <p className="text-gray-100">
+                  Nossa análise revelou que <span className="font-bold text-yellow-400">87%</span> das conversas comprometedoras acontecem <span className="font-bold underline">FORA</span> desse período de 48 horas. 
+                  Pessoas experientes em relacionamentos paralelos sabem exatamente como esconder rastros recentes, 
+                  mas deixam pistas no histórico mais antigo.
+                </p>
+              </div>
+            </div>
           </CardContent>
         </Card>
         
@@ -589,16 +601,28 @@ const UpsellPage: React.FC<UpsellPageProps> = ({ onAccept, onDecline, userData }
             ) : (
               <>
                 {/* Campo email */}
-                <div className="mb-4">
-                  <Label htmlFor="email" className="block text-left mb-1">Seu E-mail:</Label>
-                  <Input 
-                    id="email" 
-                    type="email" 
-                    placeholder="seu-email@exemplo.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    className="w-full bg-gray-900 border-gray-700"
-                  />
+                <div className="mb-6 bg-gray-800 p-4 rounded-lg border border-blue-600 shadow-lg">
+                  <Label htmlFor="email" className="flex items-center text-left mb-2 text-blue-400 font-medium">
+                    <Mail className="h-5 w-5 mr-2 text-blue-500" />
+                    SEU E-MAIL PARA RECEBER O HISTÓRICO:
+                  </Label>
+                  <div className="relative">
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      placeholder="seu-email@exemplo.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      className="w-full bg-blue-900/20 border-blue-700 text-white pl-10 pr-4 py-3 h-12 text-base focus:ring-2 focus:ring-blue-500 focus:border-blue-600"
+                    />
+                    <div className="absolute inset-y-0 right-0 pr-3 flex items-center pointer-events-none">
+                      <Lock className="h-4 w-4 text-green-500" />
+                    </div>
+                  </div>
+                  <p className="text-xs text-gray-300 mt-2 flex items-center">
+                    <Shield className="h-3 w-3 mr-1 text-green-500" />
+                    Seus dados são criptografados e protegidos
+                  </p>
                 </div>
                 
                 <Button
