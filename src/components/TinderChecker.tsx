@@ -137,25 +137,30 @@ const TinderChecker = () => {
   const handlePurchaseReport = () => {
     trackEvent("click_purchase_report");
     
-    // Na página de ofertas: primeiro rola para o topo da página
-    window.scrollTo({
-      top: 0,
-      behavior: 'instant' // Rolagem instantânea para melhor experiência
-    });
-    
-    // Em seguida muda para a página de checkout
+    // Primeiro muda para a página de checkout
     setCurrentStep('checkout');
     
-    // Usa setTimeout para dar tempo ao componente CheckoutPage de renderizar antes de rolar para o campo de email
+    // Usa setTimeout para garantir que o componente foi renderizado antes de fazer o scroll
     setTimeout(() => {
-      const emailSection = document.getElementById('email-section');
-      if (emailSection) {
-        emailSection.scrollIntoView({ behavior: 'smooth' });
-        // Destaque temporário para o campo de email
-        emailSection.classList.add('highlight-pulse');
-        setTimeout(() => emailSection.classList.remove('highlight-pulse'), 3000);
-      }
-    }, 700); // Aumentado para 700ms para garantir tempo suficiente para renderização
+      // Primeiro rola para o topo da página de checkout
+      window.scrollTo({
+        top: 0,
+        behavior: 'instant' // Rolagem instantânea para melhor experiência
+      });
+      
+      console.log("Realizando scroll para o topo da página de checkout");
+      
+      // Em seguida, após um breve intervalo, rola para o email-section se existir
+      setTimeout(() => {
+        const emailSection = document.getElementById('email-section');
+        if (emailSection) {
+          emailSection.scrollIntoView({ behavior: 'smooth' });
+          // Destaque temporário para o campo de email
+          emailSection.classList.add('highlight-pulse');
+          setTimeout(() => emailSection.classList.remove('highlight-pulse'), 3000);
+        }
+      }, 500); // Tempo para garantir que a rolagem ao topo foi concluída
+    }, 50); // Tempo mínimo para garantir que o componente foi renderizado
   };
 
   const handlePaymentSuccess = () => {
