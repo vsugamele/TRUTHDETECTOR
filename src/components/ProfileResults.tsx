@@ -215,8 +215,8 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
               </div>
             )}
             
-            <div className="relative mb-3">
-              {userData.profilePhoto && userData.profilePhoto.length > 0 ? (
+            {userData.profilePhoto && userData.profilePhoto.length > 0 && (
+              <div className="relative mb-3">
                 <img 
                   src={userData.profilePhoto}
                   alt="Perfil encontrado" 
@@ -230,15 +230,11 @@ const ProfileResults = ({ userData, onPurchase }: ProfileResultsProps) => {
                       : 'https://i.imgur.com/8MuTbk0.jpg';
                   }}
                 />
-              ) : (
-                <div className="w-28 h-28 rounded-full border-2 border-red-500 bg-gray-800 flex items-center justify-center shadow-lg">
-                  <span className="text-xs text-gray-400">Sem foto</span>
+                <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
+                  <CheckCircle className="h-4 w-4 text-black" />
                 </div>
-              )}
-              <div className="absolute -bottom-1 -right-1 bg-green-500 rounded-full p-1">
-                <CheckCircle className="h-4 w-4 text-black" />
               </div>
-            </div>
+            )}
           </div>
           <div className="bg-blue-900 px-4 py-3 text-center font-bold tracking-wide uppercase text-white">
             <span className="text-sm">INVESTIGAÇÃO CONCLUÍDA</span>
